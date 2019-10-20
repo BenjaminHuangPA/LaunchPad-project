@@ -5,6 +5,7 @@ from assets import *
 class Game(object):
 
     #this is a GitHub test
+    #this is another GitHub test because the first one didn't work, apparently
 
     def __init__(self):
         pygame.init() #start up pygame
