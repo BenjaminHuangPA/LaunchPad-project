@@ -185,7 +185,7 @@ class Tile(pygame.sprite.Sprite): #create class for the tile (child class of pyg
         self.rect.y = y * 64
 
 class Door(pygame.sprite.Sprite):
-    def __init__ (self, game, x, y, orientation):
+    def __init__ (self, game, x, y, orientation, status):
         self.groups = game.doors
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -200,9 +200,20 @@ class Door(pygame.sprite.Sprite):
 
         self.orientation = orientation #denotes if the door is "forward", "backward", "left", or "right"
 
+        self.status = status #denotes if the door is open or closed (True is open, False is closed)
+
+        if self.status == False:
+            self.image = pygame.image.load("door_blocked.png").convert()
+
         self.rect.x = x * 64
 
         self.rect.y = y * 64
+
+    def closeDoor(self):
+        self.image = pygame.image.load("door_blocked.png").convert()
+
+    def openDoor(self):
+        self.image = pygame.image.load("bg1.png").convert()
 
 class Room(object):
     def __init__(self, game, base, door, background):
@@ -228,7 +239,37 @@ class Room(object):
                 self.tiles[x][y] = Tile(self.game, x1[x], x1[y], background) #fill the 2d array with tile objects 
 
         
-#
+class item(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, image, value, description, isConsumable, rarity, ID):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        
+        self.game = game
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load(image).convert()
+
+        self.value = value
+
+        self.description = description
+
+        self.isConsumable = isConsumable
+
+        self.rarity = rarity
+
+        self.ID = ID
+
+        self.rect = self.image.get_rect()
+
+        self.rect_x = x * 32
+
+        self.rect_y = y * 32
+
+        
 
                 
         
