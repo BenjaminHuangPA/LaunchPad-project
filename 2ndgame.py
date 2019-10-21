@@ -4,9 +4,6 @@ from assets import *
 
 class Game(object):
 
-    #this is a GitHub test
-    #this is another GitHub test because the first one didn't work, apparently
-
     def __init__(self):
         pygame.init() #start up pygame
         self.window = pygame.display.set_mode((640, 640)) #set window size to 512, 512
@@ -17,15 +14,17 @@ class Game(object):
         self.all_tiles = pygame.sprite.Group()
         self.active_tiles = pygame.sprite.Group()
         self.doors = pygame.sprite.Group()
-        self.active_doors = pygame.sprite.Group() #make sprite group for this room's doors
+        self.active_doors = pygame.sprite.Group() #make sprite group for this room's doors that Horace can walk through
+        self.inactive_doors = pygame.sprite.Group() #make sprite group for this room's doors that are closed so that they will change appearance but still be drawn (removing them
+        #from self.active_doors won't actually cause them to disappear)
         self.entities = pygame.sprite.Group()
 
         self.clock = pygame.time.Clock()
 
-        self.rightDoor = Door(self, 9, 4, "right") #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
-        self.leftDoor = Door(self, 0, 4, "left")
-        self.forwardDoor = Door(self, 4, 0, "forward")
-        self.backwardDoor = Door(self, 4, 9, "backward") 
+        self.rightDoor = Door(self, 9, 4, "right", True) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
+        self.leftDoor = Door(self, 0, 4, "left", True)
+        self.forwardDoor = Door(self, 4, 0, "forward", True)
+        self.backwardDoor = Door(self, 4, 9, "backward", True) 
         
         
         self.z1r1 = Room(self, "base", [self.backwardDoor], "chasm_01.png") #initialize some basic rooms, each with a different background image to tell them apart.
@@ -117,6 +116,7 @@ class Game(object):
        self.active_tiles.draw(self.window) #draw all tiles in the active_tiles group
        self.entities.draw(self.window) #draw all entities
        self.active_doors.draw(self.window)
+       self.inactive_doors.draw(self.window)
        #group to the screen
        pygame.display.flip() #update the surfaces
 
@@ -129,7 +129,7 @@ class Game(object):
         #for some clarification, the player's roomLocation variable is an array of the format [x, y] that is used to determine what room of the 2D array "ZONE1"
         # (or zone in general) the player is currently in. So if the player enters a door to the right of the room, we would increase y by one
         
-       if pygame.sprite.collide_rect(self.player, self.rightDoor) == True: #check if the player entered a door on the right side of a room
+       if pygame.sprite.collide_rect(self.player, self.rightDoor) == True and self.rightDoor.status == True: #check if the player entered a door on the right side of a room
           
           self.player.roomLocation[1] = self.player.roomLocation[1] + 1 #modify the player's roomLocation variable one space to the right
 
@@ -137,7 +137,7 @@ class Game(object):
 
           self.switchRooms("right") #call switchRooms function below
 
-       elif pygame.sprite.collide_rect(self.player, self.leftDoor) == True: #check if the player entered a door on the left side of a room
+       elif pygame.sprite.collide_rect(self.player, self.leftDoor) == True and self.leftDoor.status == True: #check if the player entered a door on the left side of a room
 
           self.player.roomLocation[1] = self.player.roomLocation[1] - 1 #modify the player's roomLocation variable one space to the left
 
@@ -145,20 +145,23 @@ class Game(object):
 
           self.switchRooms("left") #call switchRooms function below
           
-       elif pygame.sprite.collide_rect(self.player, self.forwardDoor) == True: #check if the player entered a door that goes into a room beyond the room the player is currently in
+       elif pygame.sprite.collide_rect(self.player, self.forwardDoor) == True and self.forwardDoor.status == True: #check if the player entered a door that goes into a room beyond the room the player is currently in
            self.player.roomLocation[0] = self.player.roomLocation[0] - 1 #modify the player's roomLocation variable one space "up"
 
            print(self.player.roomLocation)
 
            self.switchRooms("forward") #call switchRooms function below
 
-       elif pygame.sprite.collide_rect(self.player, self.backwardDoor) == True: #check if the player entered a door that goes into a room behind the room the player is currently in
+       elif pygame.sprite.collide_rect(self.player, self.backwardDoor) == True and self.backwardDoor.status == True: #check if the player entered a door that goes into a room behind the room the player is currently in
            self.player.roomLocation[0] = self.player.roomLocation[0] + 1
 
            print(self.player.roomLocation)
 
            self.switchRooms("backward") #call switchRooms function below
 
+       elif pygame.sprite.collide_rect(self.player, self.rightDoor) == True and self.rightDoor.status == False:
+           print("Error message")
+       
     
           #for sprite in self.all_tiles.sprites():
           #    sprite.remove(self.all_tiles)
@@ -193,13 +196,16 @@ class Game(object):
             self.player.x = 256 #make sure that if the player enters a door that's behind them, they come out at the "front" (relatively speaking) of the next room
             self.player.y = 70
         for door in self.active_doors:
-            door.remove(self.active_doors) #remove the previous room's doors from the door sprite group so that they will (theoretically) no longer be drawn
-
+            door.closeDoor()
+            door.status = False
+            door.add(self.inactive_doors) #remove the previous room's doors from the door sprite group so that they will (theoretically) no longer be drawn
+            
         #TODO: blit over the previous room's doors with a sprite that is larger than (64x64) so that the player can no longer collide with doors that are no longer active
        
         for door in self.activeRoom.doors:
-            self.active_doors.add(door) #add the next room's doors to the active_doors sprite group to be drawn
-        
+            door.add(self.active_doors) #add the next room's doors to the active_doors sprite group to be drawn
+            door.status = True
+            door.openDoor()
           
        
 
