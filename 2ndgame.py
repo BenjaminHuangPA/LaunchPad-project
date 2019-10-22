@@ -13,6 +13,7 @@ class Game(object):
         self.all_sprites = pygame.sprite.Group()
         self.all_tiles = pygame.sprite.Group()
         self.active_tiles = pygame.sprite.Group()
+        self.inventoryWindow = pygame.sprite.Group() #create a sprite group for the inventory window
         self.doors = pygame.sprite.Group()
         self.active_doors = pygame.sprite.Group() #make sprite group for this room's doors that Horace can walk through
         self.inactive_doors = pygame.sprite.Group() #make sprite group for this room's doors that are closed so that they will change appearance but still be drawn (removing them
@@ -26,6 +27,7 @@ class Game(object):
         self.forwardDoor = Door(self, 4, 0, "forward", True)
         self.backwardDoor = Door(self, 4, 9, "backward", True) 
         
+        self.display_inventory = False #flag to check whether the inventory window is open or not
         
         self.z1r1 = Room(self, "base", [self.backwardDoor], "chasm_01.png") #initialize some basic rooms, each with a different background image to tell them apart.
         #enter a list of doors to represent the doors of the room.
@@ -44,11 +46,20 @@ class Game(object):
         #    for y in range(0, 8):
         #        self.active_tiles.add(self.z1r1.tiles[x][y])
                 #fill the active_tiles sprite group with the tiles from the room object
+
+        #create some random items
         
+        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'An apple', True, 'common', 1)
+        self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
+        self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
+
+        pygame.font.init()
 
     def new(self):
+
+        inventory = [self.apple, self.apple2, self.apple3] #create very basic inventory array
         
-        self.player = Player(self, 64, 64)
+        self.player = Player(self, 64, 64, inventory)
         
 
         self.startingRoom = self.ZONE1[self.player.roomLocation[0]][self.player.roomLocation[1]] #access the 2D array "ZONE1" above and get the room that the player starts in
@@ -62,6 +73,8 @@ class Game(object):
                 #fill the active_tiles sprite group with the tiles from the room object        
         for door in self.startingRoom.doors:
             self.active_doors.add(door)
+
+        self.inventory = inventoryGUI(self, self.player, 64, 128) #initialize new inventoryGUI object (see assets.py)
 
     def run(self): #method to run the game
         self.playing = True #initialize "self.playing" to true
@@ -93,6 +106,40 @@ class Game(object):
                     
                 if event.key == pygame.K_DOWN and self.player.y < 512:
                     self.player.move(0, 10)
+                
+                if event.key == pygame.K_e:
+                    
+                    if self.display_inventory == True:
+                        self.display_inventory = False
+                        self.toggleInventoryVisibility()
+                    elif self.display_inventory == False:
+                        self.display_inventory = True
+                        self.toggleInventoryVisibility()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mousePos = pygame.mouse.get_pos() #get position of mouse on the screen
+                
+                #print(self.display_inventory)
+                #print(self.inventory.dropButton.rect)
+                
+                if(self.display_inventory == True): #only process this loop if the inventory is visible on the screen
+                    if self.inventory.dropButton.rect.collidepoint(mousePos) == True: #check if drop button clicked
+                        
+                        print("Drop button clicked!")
+                    elif self.inventory.equipButton.rect.collidepoint(mousePos) == True: #check if equip button clicked
+                        print("Equip button clicked!")
+                    elif self.inventory.inspectButton.rect.collidepoint(mousePos) == True: #check if inspect button clicked
+                        self.inventory.inspect() #run inventoryGUI's inspect() function
+                        
+                    elif self.inventory.sellButton.rect.collidepoint(mousePos) == True: #check if sell button clicked
+                        print("Sell button clicked!")
+                    for item in self.player.inventory:
+                        offsetRect = pygame.Rect((item.x + 64, item.y + 128), (item.rect.x, item.rect.y)) 
+                        #for each item in the player's inventory, create an offset rectangle (because the inventory window's
+                        #top left point is not at the game window's (0,0)
+                        if offsetRect.collidepoint(mousePos) == True: #check if an item was clicked
+                            self.inventory.select(item) #run method defined in inventoryGUI class body (see assets.py)
+                        
+                    
             self.checkCollisions()
         pygame.display.flip()
                     
@@ -118,7 +165,16 @@ class Game(object):
        self.active_doors.draw(self.window)
        self.inactive_doors.draw(self.window)
        #group to the screen
+
+       self.inventoryWindow.draw(self.window)
+
        pygame.display.flip() #update the surfaces
+
+    def toggleInventoryVisibility(self):
+        if self.display_inventory == True:
+            self.inventoryWindow.add(self.inventory)
+        else:
+            self.inventoryWindow.remove(self.inventory)
 
     def update(self):
        self.all_sprites.update()

@@ -4,7 +4,7 @@ import pygame
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, inventory):
         self.groups = game.all_sprites, game.entities #set the player's sprite group to all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -12,8 +12,6 @@ class Player(pygame.sprite.Sprite):
         self.roomLocation = [5, 1] #denote where in the gameloop's 2d zone array the player is. i.e. index 1 of array 5.
 
         self.image = pygame.image.load("test.png").convert_alpha() #.convert_alpha() enables png transparency
-        
-        
 
         self.rect = self.image.get_rect() #how pygame knows where to draw the sprite (VERY IMPORTANT)
         #get rect returns the size of the sprite's image
@@ -57,6 +55,8 @@ class Player(pygame.sprite.Sprite):
         self.playerWalkBackwardList = self.playerWalkBackward.getSpriteList() #initialize spriteSheet object for the player walking backwards
 
         self.walkBackwardCount = 0
+
+        self.inventory = inventory #inventory instance variable        
         
         
 
@@ -240,7 +240,7 @@ class Room(object):
 
         
 class item(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, image, value, description, isConsumable, rarity, ID):
+    def __init__(self, game, x, y, image, name, value, description, isConsumable, rarity, ID):
         self.groups = game.all_sprites
 
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -252,6 +252,8 @@ class item(pygame.sprite.Sprite):
         self.y = y
 
         self.image = pygame.image.load(image).convert()
+
+        self.name = name
 
         self.value = value
 
@@ -265,10 +267,138 @@ class item(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
-        self.rect_x = x * 32
+        self.rect.x = 32 
 
-        self.rect_y = y * 32
+        self.rect.y = 32
 
+        
+
+class Button(pygame.sprite.Sprite): #define button class for the inventory GUI
+    def __init__(self, game, x, y, functionality, image, xOffset, yOffset):
+        self.groups = game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.x = x
+
+        self.y = y
+
+        self.functionality = functionality #variable to describe what the button does
+
+        self.image = pygame.image.load(image).convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x + xOffset
+
+        self.rect.y = y + yOffset
+
+        
+
+class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class 
+    def __init__(self, game, player, x, y):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.player = player #pass in the player (to get his inventory)
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load("inventory_gui_2_nobuttons.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x * 1
+
+        self.rect.y = y * 1
+
+        #initialize various button objects
+
+        self.dropButton = Button(self.game, 20, 298, "drop", "drop_button.png", 64, 128) 
+
+        self.useButton = Button(self.game, 121, 297, "use", "use_button.png", 64, 128)
+
+        self.equipButton = Button(self.game, 315, 297, "equip", "equip_button.png", 64, 128)
+
+        self.inspectButton = Button(self.game, 222, 297, "inspect", "inspect_button.png", 64, 128)
+
+        self.sellButton = Button(self.game, 315, 265, "sell", "sell_button.png", 64, 128)
+
+        self.initializeButtons() #blit buttons to screen
+    
+        self.fill() #fill the inventory grid with item sprites (See below)
+
+        self.currentSelection = 0 #initialize variable to hold the currently selected item
+
+        self.previousSelection = 0 #initialize variable to hold the previously selected item (for blitting purposes)
+
+        self.selectionImage = pygame.image.load("selected.png").convert_alpha() #load the image to show that an item is selected (red border)
+
+        self.deselectionImage = pygame.image.load("deselected.png").convert_alpha() #load the image to show that an item has been "deselected" (plain background with no red border)
+        
+
+    def fill(self): #fill the inventory window with the player's items' sprites
+        x = 24
+        y = 22
+        for item in self.player.inventory:
+            self.image.blit(item.image, (x, y)) #blit each inventory item's sprite onto the window's image
+            item.x = x #set each item's x to be the image's coordinates in the GUI (for selection purposes)
+            item.y = y #set each item's y to be the image's coordinates in the GUI (for selection purposes)
+            x += 34 #increment the x coordinate by 34 to draw the next item in the next box over
+            if x == 262: 
+                x = 24
+                y = 34
+            #if reached the end of the row, go to the next row
+
+    def initializeButtons(self): #blit button sprites to the screen
+        self.image.blit(self.dropButton.image, (self.dropButton.x, self.dropButton.y))
+        self.image.blit(self.equipButton.image, (self.equipButton.x, self.equipButton.y))
+        self.image.blit(self.inspectButton.image, (self.inspectButton.x, self.inspectButton.y))
+        self.image.blit(self.sellButton.image, (self.sellButton.x, self.sellButton.y))
+        self.image.blit(self.useButton.image, (self.useButton.x, self.useButton.y))
+
+
+    def select(self, item):
+        self.previousSelection = self.currentSelection #set the currently selected image (now the previously selected image) to the variable previousSelection
+        self.image.blit(self.selectionImage, (item.x, item.y)) #blit the red background over the newly selected image to visually show that it has been selected
+        self.image.blit(item.image, (item.x, item.y)) #re-blit the item's image to the screen 
+        self.currentSelection = item #set the currentSelection variable to the newly selected image
+        if self.previousSelection != 0:
+            self.deselect(self.previousSelection) #don't deselect the previous item if there was no previously deselected item
+        print(self.currentSelection.name)
+        print(self.currentSelection.value)
+        print(self.currentSelection.description)
+
+    def deselect(self, item):
+        self.image.blit(self.deselectionImage, (self.previousSelection.x, self.previousSelection.y)) #for the previously selected item, blit the plain grey background (erases the red one)
+        self.image.blit(item.image, (item.x, item.y)) #reblit the previously selected item's image
+
+    def inspect(self): #308, 22
+        #this method is run as a result of clicking the "inspect" button
+        if(self.currentSelection == 0):
+            print("Cannot inspect nothing!") #make sure I'm not accessing a thing that isn't of the item class
+        else:
+            pygame.font.init() #call init to use pygame's font module
+            inspectionWindow = pygame.image.load("inspection_window.png").convert() #load inspection window's image 
+            
+            font1 = pygame.font.SysFont('Times New Roman', 9) #create new font object 
+            
+            name = font1.render(self.currentSelection.name, False, (255, 255, 255)) #create name text for the currently selected object to inspect
+            desc = font1.render(self.currentSelection.description, False, (255, 255, 255)) #create description text for the currently selected object to inspect
+            #value = font1.render(self.currentSelection.value, False, (255, 255, 255))
+            inspectionWindow.blit(name, (56, 161)) #blit name/desc text to the inspectionWindow image
+            inspectionWindow.blit(desc, (79, 194))
+            #inspectionWindow.blit(value, (98, 256))
+            self.image.blit(inspectionWindow, (308, 22)) #blit inspectionWindow image to screen
+        
+        
+                    
         
 
                 
