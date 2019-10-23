@@ -4,7 +4,7 @@ import pygame
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, inventory):
+    def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD):
         self.groups = game.all_sprites, game.entities #set the player's sprite group to all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -56,7 +56,27 @@ class Player(pygame.sprite.Sprite):
 
         self.walkBackwardCount = 0
 
-        self.inventory = inventory #inventory instance variable        
+        self.inventory = inventory #inventory instance variable
+
+        self.HP = HP
+
+        self.maxHP = maxHP
+
+        self.STM = STM
+
+        self.maxSTM = STM
+
+        self.STR = STR
+
+        self.AGL = AGL
+
+        self.INT = INT
+
+        self.DEX = DEX
+
+        self.GRD = GRD
+
+        
         
         
 
@@ -66,6 +86,12 @@ class Player(pygame.sprite.Sprite):
         self.walkAnim(x, y) #play the walking animation (See below)
         self.x += x #move player left/right
         self.y += y #move player right/left
+
+    def takeDamage(self, DMG):
+        self.HP = self.HP - DMG
+
+    def heal(self, HP):
+        self.HP = self.HP + HP
         
     def walkAnim(self, x, y):
         if x < 0: #if the player walks to the left (change in x pos less than 0)
@@ -294,6 +320,78 @@ class Button(pygame.sprite.Sprite): #define button class for the inventory GUI
 
         self.rect.y = y + yOffset
 
+class statusBar(pygame.sprite.Sprite):
+    def __init__(self, game, player, x, y):
+        self.groups = game.status_bar
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.player = player
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load("statusBar.png").convert()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x * 1
+
+        self.rect.y = y * 1
+
+        self.healthBarRect = pygame.Rect(180, 34, 150, 11)
+
+        self.staminaBarRect = pygame.Rect(210, 63, 120, 11)
+
+        pygame.draw.rect(self.image, (141, 42, 42), self.healthBarRect)
+
+        pygame.draw.rect(self.image, (35, 35, 202), self.staminaBarRect)
+
+        self.renderPlayerAttributes()
+
+        
+    def increaseHealth(self, health):
+        print(self.player.HP)
+        if(self.player.HP < self.player.maxHP):
+            newHealth = pygame.Rect(180, 34, 3 * self.player.HP, 11)
+            pygame.draw.rect(self.image, (141, 42, 42), newHealth)
+        else:
+            fullHP = pygame.Rect(180, 34, 3 * self.player.maxHP, 11)
+            pygame.draw.rect(self.image, (141, 42, 42), fullHP)
+            
+
+    def decreaseHealth(self, health):
+        print(self.player.HP)
+        if(self.player.HP > 0):
+            remainingHP = (self.player.HP) * 3
+            maxHP = (self.player.maxHP - self.player.HP) * 3
+            healthLost = pygame.Rect(180 + remainingHP, 34, maxHP, 11)
+            pygame.draw.rect(self.image, (82, 51, 46), healthLost)
+        else:
+            noHP = pygame.Rect(180, 34, self.player.maxHP * 3, 11)
+            pygame.draw.rect(self.image, (82, 51, 46), noHP)
+
+    def renderPlayerAttributes(self):
+        pygame.font.init()
+
+        font1 = pygame.font.SysFont("Times New Roman", 20)
+
+        strength = font1.render(str(self.player.STR), False, (198, 187, 187))
+        agility = font1.render(str(self.player.AGL), False, (198, 187, 187))
+        intelligence = font1.render(str(self.player.INT), False, (198, 187, 187))
+        dexterity = font1.render(str(self.player.DEX), False, (198, 187, 187))
+        guard = font1.render(str(self.player.GRD), False, (198, 187, 187))
+
+        self.image.blit(strength, (158, 87))
+        self.image.blit(agility, (165, 106))
+        self.image.blit(intelligence, (157, 126))
+        self.image.blit(dexterity, (273, 87))
+        self.image.blit(guard, (274, 107))
+
+        
+            
         
 
 class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class 
@@ -394,6 +492,10 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             #value = font1.render(self.currentSelection.value, False, (255, 255, 255))
             inspectionWindow.blit(name, (56, 161)) #blit name/desc text to the inspectionWindow image
             inspectionWindow.blit(desc, (79, 194))
+
+            scaledImage = pygame.transform.scale(self.currentSelection.image, (128, 128))
+            inspectionWindow.blit(scaledImage, (24, 24))
+            
             #inspectionWindow.blit(value, (98, 256))
             self.image.blit(inspectionWindow, (308, 22)) #blit inspectionWindow image to screen
         
