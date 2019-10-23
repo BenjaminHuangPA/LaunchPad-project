@@ -6,7 +6,7 @@ class Game(object):
 
     def __init__(self):
         pygame.init() #start up pygame
-        self.window = pygame.display.set_mode((640, 640)) #set window size to 512, 512
+        self.window = pygame.display.set_mode((640, 790)) #set window size to 512, 512
         pygame.display.set_caption("First game") #title window
         pygame.key.set_repeat(500, 100)
 
@@ -18,7 +18,21 @@ class Game(object):
         self.active_doors = pygame.sprite.Group() #make sprite group for this room's doors that Horace can walk through
         self.inactive_doors = pygame.sprite.Group() #make sprite group for this room's doors that are closed so that they will change appearance but still be drawn (removing them
         #from self.active_doors won't actually cause them to disappear)
+        self.status_bar = pygame.sprite.Group()
         self.entities = pygame.sprite.Group()
+
+        self.leftwall = pygame.image.load("chasm_wall_left.png").convert()
+        self.rightwall = pygame.image.load("chasm_wall_right.png").convert()
+        self.topwall = pygame.image.load("chasm_wall_top.png").convert()
+        self.bottomwall = pygame.image.load("chasm_wall_bottom.png").convert()
+
+        self.window.blit(self.rightwall, (576, 0))
+
+        self.window.blit(self.topwall, (0, 0))
+
+        self.window.blit(self.bottomwall, (0, 576))
+
+        self.window.blit(self.leftwall, (0, 0))
 
         self.clock = pygame.time.Clock()
 
@@ -53,14 +67,17 @@ class Game(object):
         self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
         self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
 
+        
+
         pygame.font.init()
 
     def new(self):
 
         inventory = [self.apple, self.apple2, self.apple3] #create very basic inventory array
         
-        self.player = Player(self, 64, 64, inventory)
-        
+        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5)
+
+        self.statusbar = statusBar(self, self.player, 0, 640)
 
         self.startingRoom = self.ZONE1[self.player.roomLocation[0]][self.player.roomLocation[1]] #access the 2D array "ZONE1" above and get the room that the player starts in
 
@@ -115,6 +132,15 @@ class Game(object):
                     elif self.display_inventory == False:
                         self.display_inventory = True
                         self.toggleInventoryVisibility()
+
+                if event.key == pygame.K_d:
+                    self.player.takeDamage(1)
+                    self.statusbar.decreaseHealth(1)
+
+                if event.key == pygame.K_h:
+                    self.player.heal(1)
+                    self.statusbar.increaseHealth(1)
+                    
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos() #get position of mouse on the screen
                 
@@ -137,6 +163,7 @@ class Game(object):
                         #for each item in the player's inventory, create an offset rectangle (because the inventory window's
                         #top left point is not at the game window's (0,0)
                         if offsetRect.collidepoint(mousePos) == True: #check if an item was clicked
+                            print("wtf?")
                             self.inventory.select(item) #run method defined in inventoryGUI class body (see assets.py)
                         
                     
@@ -159,6 +186,8 @@ class Game(object):
        
        
        self.draw_grid() #call the draw_grid method
+
+       self.status_bar.draw(self.window)
        
        self.active_tiles.draw(self.window) #draw all tiles in the active_tiles group
        self.entities.draw(self.window) #draw all entities
