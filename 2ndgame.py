@@ -36,10 +36,10 @@ class Game(object):
 
         self.clock = pygame.time.Clock()
 
-        self.rightDoor = Door(self, 9, 4, "right", True) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
-        self.leftDoor = Door(self, 0, 4, "left", True)
-        self.forwardDoor = Door(self, 4, 0, "forward", True)
-        self.backwardDoor = Door(self, 4, 9, "backward", True) 
+        self.rightDoor = Door(self, 9, 4, "right", True, "chasm_door_right.png", "chasm_wall_right.png" ) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
+        self.leftDoor = Door(self, 0, 4, "left", True, "chasm_door_left.png", "chasm_wall_left.png")
+        self.forwardDoor = Door(self, 4, 0, "forward", True, "chasm_door_top.png", "chasm_wall_top.png")
+        self.backwardDoor = Door(self, 4, 9, "backward", True, "chasm_door_bottom.png", "chasm_wall_top.png") 
         
         self.display_inventory = False #flag to check whether the inventory window is open or not
         

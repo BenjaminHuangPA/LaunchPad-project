@@ -4,6 +4,7 @@ import pygame
 
 
 class Player(pygame.sprite.Sprite):
+    
     def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD):
         self.groups = game.all_sprites, game.entities #set the player's sprite group to all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -211,12 +212,16 @@ class Tile(pygame.sprite.Sprite): #create class for the tile (child class of pyg
         self.rect.y = y * 64
 
 class Door(pygame.sprite.Sprite):
-    def __init__ (self, game, x, y, orientation, status):
+    def __init__ (self, game, x, y, orientation, status, spriteImage, bgImage):
         self.groups = game.doors
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
 
-        self.image = pygame.image.load("bg1.png").convert()
+        self.spriteImage = spriteImage
+
+        self.bgImage = bgImage #get the background wall's image so we can blit over the open doors once they're no longer open
+
+        self.image = pygame.image.load(spriteImage).convert()
 
         self.rect = self.image.get_rect()
 
@@ -228,6 +233,8 @@ class Door(pygame.sprite.Sprite):
 
         self.status = status #denotes if the door is open or closed (True is open, False is closed)
 
+        #self.image = spriteImage
+
         if self.status == False:
             self.image = pygame.image.load("door_blocked.png").convert()
 
@@ -235,11 +242,25 @@ class Door(pygame.sprite.Sprite):
 
         self.rect.y = y * 64
 
+    #these two methods change the door's appearance to show that it's shut or open
+
     def closeDoor(self):
-        self.image = pygame.image.load("door_blocked.png").convert()
+        bgWall = pygame.image.load(self.bgImage).convert()
+        print(self.x)
+        print(self.y)
+        if self.orientation == "right":
+            self.image.blit(bgWall, (0, 0), (0, self.y * 64, 64, 64))
+        elif self.orientation == "left":
+            self.image.blit(bgWall, (0, 0), (0, self.y * 64, 64, 64))
+        elif self.orientation == "forward":
+            self.image.blit(bgWall, (0, 0), (self.x * 64, 0, 64, 64))
+        elif self.orientation == "backward":
+            self.image.blit(bgWall, (0, 0), (self.x * 64, 0, 64, 64))
 
     def openDoor(self):
-        self.image = pygame.image.load("bg1.png").convert()
+        self.image = pygame.image.load(self.spriteImage).convert()
+
+    
 
 class Room(object):
     def __init__(self, game, base, door, background):
