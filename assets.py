@@ -5,7 +5,7 @@ import pygame
 
 class Player(pygame.sprite.Sprite):
     
-    def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD):
+    def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD, headArmor, torsoArmor, armArmor, legArmor):
         self.groups = game.all_sprites, game.entities #set the player's sprite group to all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -77,7 +77,13 @@ class Player(pygame.sprite.Sprite):
 
         self.GRD = GRD
 
-        
+        self.headArmor = headArmor
+
+        self.torsoArmor = torsoArmor
+
+        self.armArmor = armArmor
+
+        self.legArmor = legArmor
         
         
 
@@ -100,6 +106,7 @@ class Player(pygame.sprite.Sprite):
                 leftSpriteTuple = self.playerWalkLeftList[self.walkLeftCount] #
                 self.replaceBackground("left") #call blitOut2 method to blit new blank background onto the image
                 self.playerWalkLeft.draw(self.image, leftSpriteTuple[0], leftSpriteTuple[1]) #call the sprite class instance's draw method to blit the correct sprite onto the image
+                self.renderArmor("left", leftSpriteTuple[0], leftSpriteTuple[1])
                 if self.walkLeftCount == len(self.playerWalkLeftList) - 1: 
                     self.walkLeftCount = 0 #if reached the end of the array of sprites, start over at the beginning
                 else:
@@ -110,6 +117,7 @@ class Player(pygame.sprite.Sprite):
                 rightSpriteTuple = self.playerWalkRightList[self.walkRightCount]
                 self.replaceBackground("right")
                 self.playerWalkRight.draw(self.image, rightSpriteTuple[0], rightSpriteTuple[1])
+                self.renderArmor("right", rightSpriteTuple[0], rightSpriteTuple[1])
                 if self.walkRightCount == len(self.playerWalkRightList) - 1:
                     self.walkRightCount = 0
                 else:
@@ -120,6 +128,7 @@ class Player(pygame.sprite.Sprite):
                 downSpriteTuple = self.playerWalkBackwardList[self.walkBackwardCount]
                 self.replaceBackground("down")
                 self.playerWalkBackward.draw(self.image, downSpriteTuple[0], downSpriteTuple[1])
+                self.renderArmor("down", downSpriteTuple[0], downSpriteTuple[1])
                 if self.walkBackwardCount == len(self.playerWalkBackwardList) - 1:
                     self.walkBackwardCount = 0
                 else:
@@ -129,6 +138,7 @@ class Player(pygame.sprite.Sprite):
                 upSpriteTuple = self.playerWalkForwardList[self.walkForwardCount]
                 self.replaceBackground("up")
                 self.playerWalkForward.draw(self.image, upSpriteTuple[0], upSpriteTuple[1])
+                self.renderArmor("up", upSpriteTuple[0], upSpriteTuple[1])
                 if self.walkForwardCount == len(self.playerWalkForwardList) - 1:
                     self.walkForwardCount = 0
                 else:
@@ -139,6 +149,55 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.rect.x = self.x * 1
         self.rect.y = self.y * 1
+
+    def renderArmor(self, direction, tuple1, tuple2):
+        if self.headArmor != None:
+            if direction == "left":
+                self.headArmor.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.headArmor.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.headArmor.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.headArmor.animWalkForward.draw(self.image, tuple1, tuple2)
+        else:
+            pass
+
+        if self.torsoArmor != None:
+            if direction == "left":
+                self.torsoArmor.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.torsoArmor.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.torsoArmor.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.torsoArmor.animWalkForward.draw(self.image, tuple1, tuple2)
+        else:
+            pass
+
+        if self.armArmor != None:
+            if direction == "left":
+                self.armArmor.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.armArmor.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.armArmor.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.armArmor.animWalkForward.draw(self.image, tuple1, tuple2)
+        else:
+            pass
+
+        if self.legArmor != None:
+            if direction == "left":
+                self.legArmor.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.legArmor.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.legArmor.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.legArmor.animWalkForward.draw(self.image, tuple1, tuple2)
+        else:
+            pass
 
     
 
@@ -184,7 +243,63 @@ class spriteSheet(object): #create spriteSheet class to handle sprite sheets
         
     def draw(self, surface, x, y):
         surface.blit(self.sheet, (x, y, self.cellWidth, self.cellHeight))
-        
+
+class Armor(pygame.sprite.Sprite):
+    def __init__(self, game, name, x, y, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load(itemImage).convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+        self.forwardSpriteSheetName = forwardSpriteSheetName #remember: these are the FILE NAMES OF THE SPRITE SHEETS
+
+        self.backwardSpriteSheetName = backwardSpriteSheetName
+
+        self.leftSpriteSheetName = leftSpriteSheetName
+
+        self.rightSpriteSheetName = rightSpriteSheetName
+
+        self.equipImage = equipImage
+
+        self.forwardSpriteSheet = None #remember: these are LISTS OF COORDINATES CORRESPONDING TO A SPRITE SHEET, NOT THE SPRITE SHEET ITSELF!!!!
+
+        self.backwardSpriteSheet = None
+
+        self.leftSpriteSheet = None
+
+        self.rightSpriteSheet = None
+
+        self.assignSpriteSheets()
+
+    def assignSpriteSheets(self):
+        self.animWalkLeft = spriteSheet(self.leftSpriteSheetName, 8, 1) #remember: these are THE SPRITE SHEET OBJECTS ON WHICH "DRAW" WILL BE CALLED
+
+        self.animWalkRight = spriteSheet(self.rightSpriteSheetName, 8, 1)
+
+        self.animWalkForward = spriteSheet(self.forwardSpriteSheetName, 6, 1)
+
+        self.animWalkBackward = spriteSheet(self.backwardSpriteSheetName, 6, 1)
+
+        self.leftSpriteSheet = self.animWalkLeft.getSpriteList()
+
+        self.rightSpriteSheet = self.animWalkRight.getSpriteList()
+
+        self.forwardSpriteSheet = self.animWalkForward.getSpriteList()
+
+        self.backwardSpriteSheet = self.animWalkBackward.getSpriteList()
     
 
 class Tile(pygame.sprite.Sprite): #create class for the tile (child class of pygame.sprite.Sprite
@@ -263,7 +378,7 @@ class Door(pygame.sprite.Sprite):
     
 
 class Room(object):
-    def __init__(self, game, base, door, background):
+    def __init__(self, game, base, door, background, props):
         self.base = base
         self.door = door #list of doors that this room has
         self.game = game 
@@ -273,6 +388,8 @@ class Room(object):
         self.doors = door
 
         rows, cols = (8, 8)
+
+        self.props = props
 
         #initialize array the manual way
         self.tiles = [[0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0]]
@@ -284,7 +401,7 @@ class Room(object):
         for x in range(0, 8):
             for y in range(0, 8):
                 self.tiles[x][y] = Tile(self.game, x1[x], x1[y], background) #fill the 2d array with tile objects 
-
+        
         
 class item(pygame.sprite.Sprite):
     def __init__(self, game, x, y, image, name, value, description, isConsumable, rarity, ID):
@@ -317,6 +434,37 @@ class item(pygame.sprite.Sprite):
         self.rect.x = 32 
 
         self.rect.y = 32
+
+class Prop(pygame.sprite.Sprite):
+    def __init__(self, x, y, name, value, isInteractable, spriteImage):
+
+        #self.game = game
+
+        #self.groups = game.props
+
+        pygame.sprite.Sprite.__init__(self)
+
+        #self.game = game
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load(spriteImage).convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.name = name
+
+        self.value = value
+
+        self.isInteractable = isInteractable
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+    
 
         
 
@@ -522,8 +670,6 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
         
         
                     
-        
-
                 
         
 
