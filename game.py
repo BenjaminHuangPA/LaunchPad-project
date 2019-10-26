@@ -72,21 +72,21 @@ class Game(object):
 
         #create some random items
         
-        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'An apple', True, 'common', 1)
+        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
         self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
         self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_game.png", "broken_gauntlets_game.png")
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_game.png", "broken_cuirass_game.png")
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
 
         pygame.font.init()
 
     def new(self):
 
-        inventory = [self.apple, self.apple2, self.apple3] #create very basic inventory array
+        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass] #create very basic inventory array
         
-        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, self.broken_cuirass, self.broken_gauntlets, None)
+        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None)
 
         self.statusbar = statusBar(self, self.player, 0, 640)
 
@@ -122,17 +122,17 @@ class Game(object):
                 
                 if event.key == pygame.K_ESCAPE:
                     self.quit()
-                if event.key == pygame.K_LEFT and self.player.x > 64:
+                if event.key == pygame.K_LEFT and self.player.x > 64 and self.checkPropCollisions() == False:
                     self.player.move(-10, 0)
                     
-                if event.key == pygame.K_RIGHT and self.player.x < 512:
+                if event.key == pygame.K_RIGHT and self.player.x < 512 and self.checkPropCollisions() == False:
                     
                     self.player.move(10, 0)
                         
-                if event.key == pygame.K_UP and self.player.y > 64:
+                if event.key == pygame.K_UP and self.player.y > 64 and self.checkPropCollisions() == False:
                     self.player.move(0, -10)
                     
-                if event.key == pygame.K_DOWN and self.player.y < 512:
+                if event.key == pygame.K_DOWN and self.player.y < 512 and self.checkPropCollisions() == False:
                     self.player.move(0, 10)
                 
                 if event.key == pygame.K_e:
@@ -159,16 +159,34 @@ class Game(object):
                 #print(self.inventory.dropButton.rect)
                 
                 if(self.display_inventory == True): #only process this loop if the inventory is visible on the screen
+                    headRect = pygame.Rect(470, 146, 64, 64)
+                    torsoRect = pygame.Rect(470, 228, 64, 64)
+                    armsRect = pygame.Rect(470, 310, 64, 64)
+                    legsRect = pygame.Rect(470, 392, 64, 64)
+                    
+
                     if self.inventory.dropButton.rect.collidepoint(mousePos) == True: #check if drop button clicked
                         
                         print("Drop button clicked!")
                     elif self.inventory.equipButton.rect.collidepoint(mousePos) == True: #check if equip button clicked
                         print("Equip button clicked!")
+                        if(self.inventory.currentEquipmentSelection == None):
+                            self.inventory.equip()
+                        else:
+                            self.inventory.unequip()
                     elif self.inventory.inspectButton.rect.collidepoint(mousePos) == True: #check if inspect button clicked
                         self.inventory.inspect() #run inventoryGUI's inspect() function
                         
                     elif self.inventory.sellButton.rect.collidepoint(mousePos) == True: #check if sell button clicked
                         print("Sell button clicked!")
+                    elif headRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("head")
+                    elif torsoRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("torso")
+                    elif armsRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("arms")
+                    elif legsRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("legs")
                     for item in self.player.inventory:
                         offsetRect = pygame.Rect((item.x + 64, item.y + 128), (item.rect.x, item.rect.y)) 
                         #for each item in the player's inventory, create an offset rectangle (because the inventory window's
@@ -176,6 +194,7 @@ class Game(object):
                         if offsetRect.collidepoint(mousePos) == True: #check if an item was clicked
                             print("wtf?")
                             self.inventory.select(item) #run method defined in inventoryGUI class body (see assets.py)
+                            
                         
                     
             self.checkCollisions()
@@ -213,6 +232,14 @@ class Game(object):
        self.inventoryWindow.draw(self.window)
 
        pygame.display.flip() #update the surfaces
+
+    def checkPropCollisions(self):
+        collides = False
+        for prop in self.active_props.sprites():
+            if pygame.sprite.collide_rect(self.player, prop) == True:
+                collides = True
+
+        return collides
 
     def toggleInventoryVisibility(self):
         if self.display_inventory == True:
@@ -303,8 +330,7 @@ class Game(object):
             door.status = False
             door.add(self.inactive_doors) #remove the previous room's doors from the door sprite group so that they will (theoretically) no longer be drawn
             
-       
-       
+        
         for door in self.activeRoom.doors:
             door.add(self.active_doors) #add the next room's doors to the active_doors sprite group to be drawn
             door.status = True
