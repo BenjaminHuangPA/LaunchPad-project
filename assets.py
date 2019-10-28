@@ -5,7 +5,7 @@ import pygame
 
 class Player(pygame.sprite.Sprite):
     
-    def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD, headArmor, torsoArmor, armArmor, legArmor):
+    def __init__(self, game, x, y, inventory, HP, maxHP, STM, maxSTM, STR, AGL, INT, DEX, GRD, headArmor, torsoArmor, armArmor, legArmor, lWeapon, rWeapon):
         self.groups = game.all_sprites, game.entities #set the player's sprite group to all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -84,6 +84,10 @@ class Player(pygame.sprite.Sprite):
         self.armArmor = armArmor
 
         self.legArmor = legArmor
+
+        self.lWeapon = lWeapon
+
+        self.rWeapon = rWeapon
         
         
 
@@ -100,6 +104,23 @@ class Player(pygame.sprite.Sprite):
     def heal(self, HP):
         self.HP = self.HP + HP
 
+    def canEquip(self, item):
+        flag = True
+        if item.statReq["STR"] > self.STR:
+            flag = "strength"
+        if item.statReq["DEX"] > self.DEX:
+            flag = "dexterity"
+        if item.statReq["AGL"] > self.AGL:
+            flag = "agility"
+        if item.statReq["INT"] > self.INT:
+            flag = "intelligence"
+        if(flag == True):
+            print("all good!")
+        
+        return flag
+        
+    
+        
     def equipArmor(self, armor):
         if armor.region == "head":
             self.headArmor = armor
@@ -110,6 +131,13 @@ class Player(pygame.sprite.Sprite):
         elif armor.region == "legs":
             self.legArmor = armor
 
+    def equipWeapon(self, weapon):
+        if weapon.hand == "left":
+            self.lWeapon = weapon
+        elif weapon.hand == "right":
+            self.rWeapon = weapon
+            
+
     def unequipArmor(self, region):
         if region == "head":
             self.headArmor = None
@@ -119,6 +147,12 @@ class Player(pygame.sprite.Sprite):
             self.armArmor = None
         elif region == "legs":
             self.legArmor = None
+
+    def unequipWeapon(self, hand):
+        if hand == "lweapon":
+            self.lWeapon = None
+        elif hand == "rweapon":
+            self.rWeapon = None
         
     def walkAnim(self, x, y):
         if x < 0: #if the player walks to the left (change in x pos less than 0)
@@ -126,7 +160,7 @@ class Player(pygame.sprite.Sprite):
                 leftSpriteTuple = self.playerWalkLeftList[self.walkLeftCount] #
                 self.replaceBackground("left") #call blitOut2 method to blit new blank background onto the image
                 self.playerWalkLeft.draw(self.image, leftSpriteTuple[0], leftSpriteTuple[1]) #call the sprite class instance's draw method to blit the correct sprite onto the image
-                self.renderArmor("left", leftSpriteTuple[0], leftSpriteTuple[1])
+                self.renderEquipment("left", leftSpriteTuple[0], leftSpriteTuple[1])
                 if self.walkLeftCount == len(self.playerWalkLeftList) - 1: 
                     self.walkLeftCount = 0 #if reached the end of the array of sprites, start over at the beginning
                 else:
@@ -137,7 +171,7 @@ class Player(pygame.sprite.Sprite):
                 rightSpriteTuple = self.playerWalkRightList[self.walkRightCount]
                 self.replaceBackground("right")
                 self.playerWalkRight.draw(self.image, rightSpriteTuple[0], rightSpriteTuple[1])
-                self.renderArmor("right", rightSpriteTuple[0], rightSpriteTuple[1])
+                self.renderEquipment("right", rightSpriteTuple[0], rightSpriteTuple[1])
                 if self.walkRightCount == len(self.playerWalkRightList) - 1:
                     self.walkRightCount = 0
                 else:
@@ -148,7 +182,7 @@ class Player(pygame.sprite.Sprite):
                 downSpriteTuple = self.playerWalkBackwardList[self.walkBackwardCount]
                 self.replaceBackground("down")
                 self.playerWalkBackward.draw(self.image, downSpriteTuple[0], downSpriteTuple[1])
-                self.renderArmor("down", downSpriteTuple[0], downSpriteTuple[1])
+                self.renderEquipment("down", downSpriteTuple[0], downSpriteTuple[1])
                 if self.walkBackwardCount == len(self.playerWalkBackwardList) - 1:
                     self.walkBackwardCount = 0
                 else:
@@ -158,7 +192,7 @@ class Player(pygame.sprite.Sprite):
                 upSpriteTuple = self.playerWalkForwardList[self.walkForwardCount]
                 self.replaceBackground("up")
                 self.playerWalkForward.draw(self.image, upSpriteTuple[0], upSpriteTuple[1])
-                self.renderArmor("up", upSpriteTuple[0], upSpriteTuple[1])
+                self.renderEquipment("up", upSpriteTuple[0], upSpriteTuple[1])
                 if self.walkForwardCount == len(self.playerWalkForwardList) - 1:
                     self.walkForwardCount = 0
                 else:
@@ -170,7 +204,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.x * 1
         self.rect.y = self.y * 1
 
-    def renderArmor(self, direction, tuple1, tuple2):
+    def renderEquipment(self, direction, tuple1, tuple2):
         if self.headArmor != None:
             if direction == "left":
                 self.headArmor.animWalkLeft.draw(self.image, tuple1, tuple2)
@@ -219,6 +253,31 @@ class Player(pygame.sprite.Sprite):
         else:
             pass
 
+        if self.lWeapon != None:
+            if direction == "left":
+                self.lWeapon.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.lWeapon.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.lWeapon.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.lWeapon.animWalkForward.draw(self.image, tuple1, tuple2)
+            else:
+                pass
+
+        if self.rWeapon != None:
+            if direction == "left":
+                self.rWeapon.animWalkLeft.draw(self.image, tuple1, tuple2)
+            elif direction == "right":
+                self.rWeapon.animWalkRight.draw(self.image, tuple1, tuple2)
+            elif direction == "down":
+                self.rWeapon.animWalkBackward.draw(self.image, tuple1, tuple2)
+            elif direction == "up":
+                self.rWeapon.animWalkForward.draw(self.image, tuple1, tuple2)
+            else:
+                pass
+
+        
     
 
     def replaceBackground(self, direction):
@@ -264,8 +323,8 @@ class spriteSheet(object): #create spriteSheet class to handle sprite sheets
     def draw(self, surface, x, y):
         surface.blit(self.sheet, (x, y, self.cellWidth, self.cellHeight))
 
-class Armor(pygame.sprite.Sprite):
-    def __init__(self, game, name, x, y, region, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
+class Equipable(pygame.sprite.Sprite):
+    def __init__(self, game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
         self.groups = game.all_sprites
 
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -278,7 +337,7 @@ class Armor(pygame.sprite.Sprite):
 
         self.y = y
 
-        self.region = region
+        self.statReq = statReq
 
         #TODO: implement description attribute
 
@@ -332,8 +391,27 @@ class Armor(pygame.sprite.Sprite):
         self.forwardSpriteSheet = self.animWalkForward.getSpriteList()
 
         self.backwardSpriteSheet = self.animWalkBackward.getSpriteList()
-    
 
+class Armor(Equipable):
+    def __init__(self, game, name, x, y, statReq, region, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
+        super().__init__(game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description)
+        self.region = region
+        
+class Weapon(Equipable):
+
+    def __init__(self, game, name, x, y, weaponType, hand, weighting, dmgType, rawDMG, critChance, elemBonus, statReq, bonus, specAttack, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
+        super().__init__(game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description)    
+        self.weaponType = weaponType
+        self.hand = hand
+        self.weighting = weighting
+        self.dmgType = dmgType
+        self.rawDMg = rawDMG
+        self.critChance = critChance
+        self.elemBonus = elemBonus
+        self.bonus = bonus
+        self.specAttack = specAttack
+        self.type = "weapon"
+        
 class Tile(pygame.sprite.Sprite): #create class for the tile (child class of pygame.sprite.Sprite
     def __init__(self, game, x, y, background):
         self.groups = game.all_sprites, game.all_tiles #set this sprite's groups to
@@ -469,7 +547,7 @@ class item(pygame.sprite.Sprite):
 
         self.rect.y = 32
 
-class Prop(pygame.sprite.Sprite):
+class Prop(pygame.sprite.Sprite): #props are just background images, like tables or chairs
     def __init__(self, x, y, name, value, isInteractable, spriteImage):
 
         #self.game = game
@@ -653,7 +731,43 @@ class textWrapper(object):
         surface.blit(lastLine, (x, yCoord))
             
         
-            
+class messageBox(pygame.sprite.Sprite): #simple class for displayed closeable messages to the player
+    def __init__(self, game, player, x, y, message):
+
+
+        self.groups = game.active_message_boxes
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.game.message_box_active = True
+
+        self.player = player
+
+        self.x = x
+
+        self.y = y
+
+        self.message = message
+
+        self.image = pygame.image.load("message_box.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x * 1
+
+        self.rect.y = y * 1
+
+        self.okButton = Button(self.game, 141, 113, "OK", "ok_button.png", 64, 128)
+
+        self.image.blit(self.okButton.image, (self.okButton.x, self.okButton.y))
+
+        textwrapper = textWrapper()
+
+        textwrapper.blitText(self.image, 58, 28, message, 296, 22, 20, (255, 255, 255))
+    
+        
         
 
 class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class 
@@ -776,18 +890,31 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
         if self.currentSelection.type != "armor" and self.currentSelection.type != "weapon":
             print("Cannot equip that item!")
         else:
+            if self.player.canEquip(self.currentSelection) == True:
+                if self.currentSelection.type == "armor":
+                    if self.currentSelection.region == "head":
+                        self.image.blit(self.currentSelection.equipImage, (406, 18))
+                    elif self.currentSelection.region == "torso":
+                        self.image.blit(self.currentSelection.equipImage, (406, 100))
+                    elif self.currentSelection.region == "arms":
+                        self.image.blit(self.currentSelection.equipImage, (406, 182))
+                    elif self.currentSelection.region == "legs":
+                        self.image.blit(self.currentSelection.equipImage, (407, 864))
 
-            if self.currentSelection.type == "armor":
-                if self.currentSelection.region == "head":
-                    self.image.blit(self.currentSelection.equipImage, (406, 18))
-                elif self.currentSelection.region == "torso":
-                    self.image.blit(self.currentSelection.equipImage, (406, 100))
-                elif self.currentSelection.region == "arms":
-                    self.image.blit(self.currentSelection.equipImage, (406, 182))
-                elif self.currentSelection.region == "legs":
-                    self.image.blit(self.currentSelection.equipImage, (407, 864))
+                    self.player.equipArmor(self.currentSelection)
+                elif self.currentSelection.type == "weapon":
+                    if self.currentSelection.hand == "left":
+                        self.image.blit(self.currentSelection.equipImage, (318, 100))
+                    elif self.currentSelection.hand == "right":
+                        self.image.blit(self.currentSelection.equipImage, (318, 182))
 
-                self.player.equipArmor(self.currentSelection)
+                    self.player.equipWeapon(self.currentSelection)
+            else:
+                if self.player.canEquip(self.currentSelection) != True:
+                    message = "Your " + self.player.canEquip(self.currentSelection) + " is not high enough to equip this item."
+                    statBox = messageBox(self.game, self.player, 66, 128, message)
+                
+                
 
     def selectEquipment(self, slot):
         equipmentSelected = pygame.image.load("equipment_selected.png").convert_alpha()
@@ -803,7 +930,12 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
         elif slot == "legs" and self.player.legArmor != None:
             self.image.blit(equipmentSelected, (406, 164))
             self.currentEquipmentSelection = "legs"
-    
+        elif slot == "lweapon" and self.player.lWeapon != None:
+            self.image.blit(equipmentSelected, (318, 100))
+            self.currentEquipmentSelection = "lweapon"
+        elif slot == "rweapon" and self.player.rWeapon != None:
+            self.image.blit(equipmentSelected, (319, 182))
+            self.currentEquipmentSelection = "rweapon"
             
         self.equipButton.image = pygame.image.load("unequip_button.png").convert_alpha()
 
@@ -812,7 +944,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
        
 
     def unequip(self):
-
+        print("unequip method run")
         equipmentUnselected = pygame.image.load("nothing_equipped.png").convert_alpha()
         
         if self.currentEquipmentSelection == "head":
@@ -827,6 +959,13 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
         elif self.currentEquipmentSelection == "legs":
             self.player.unequipArmor("legs")
             self.image.blit(equipmentUnselected, (406, 164))
+        elif self.currentEquipmentSelection == "lweapon":
+            self.player.unequipWeapon("lweapon")
+            self.image.blit(equipmentUnselected, (318, 100))
+        elif self.currentEquipmentSelection == "rweapon":
+            self.player.unequipWeapon("rweapon")
+            self.image.blit(equipmentUnselected, (318, 182))
+            
 
         self.equipButton.image = pygame.image.load("equip_button.png").convert_alpha()
 

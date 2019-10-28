@@ -26,6 +26,9 @@ class Game(object):
         self.entities = pygame.sprite.Group()
         self.props = pygame.sprite.Group()
         self.active_props = pygame.sprite.Group()
+        self.active_message_boxes = pygame.sprite.Group() #sprite group to hold active message boxes
+
+        self.message_box_active = False #check if there are active message boxes
 
         #for prop in objects.cave_plants:
         #    self.props.add(prop)
@@ -76,17 +79,28 @@ class Game(object):
         self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
         self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+        broken_gauntlets_statreq = {"STR": 1, "DEX": 500, "AGL": 0, "INT": 0}
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+        broken_cuirass_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
+        
+
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_statreq, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_statreq, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+
+        broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
+
+        broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
+
+        self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword_back.png", "broken_sword_front.png", "broken_sword_left.png", "broken_sword_right.png", "broken_sword_32x32.png", "broken_sword_equip.png", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.") 
 
         pygame.font.init()
 
     def new(self):
 
-        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass] #create very basic inventory array
+        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_sword] #create very basic inventory array
         
-        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None)
+        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
 
         self.statusbar = statusBar(self, self.player, 0, 640)
 
@@ -163,7 +177,8 @@ class Game(object):
                     torsoRect = pygame.Rect(470, 228, 64, 64)
                     armsRect = pygame.Rect(470, 310, 64, 64)
                     legsRect = pygame.Rect(470, 392, 64, 64)
-                    
+                    lWeaponRect = pygame.Rect(382, 228, 64, 64)
+                    rWeaponRect = pygame.Rect(383, 310, 64, 64)
 
                     if self.inventory.dropButton.rect.collidepoint(mousePos) == True: #check if drop button clicked
                         
@@ -187,6 +202,10 @@ class Game(object):
                         self.inventory.selectEquipment("arms")
                     elif legsRect.collidepoint(mousePos) == True:
                         self.inventory.selectEquipment("legs")
+                    elif lWeaponRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("lweapon")
+                    elif rWeaponRect.collidepoint(mousePos) == True:
+                        self.inventory.selectEquipment("rweapon")
                     for item in self.player.inventory:
                         offsetRect = pygame.Rect((item.x + 64, item.y + 128), (item.rect.x, item.rect.y)) 
                         #for each item in the player's inventory, create an offset rectangle (because the inventory window's
@@ -194,6 +213,12 @@ class Game(object):
                         if offsetRect.collidepoint(mousePos) == True: #check if an item was clicked
                             print("wtf?")
                             self.inventory.select(item) #run method defined in inventoryGUI class body (see assets.py)
+
+                if self.message_box_active == True:
+                    mousePos = pygame.mouse.get_pos()
+                    for sprite in self.active_message_boxes.sprites():
+                        if sprite.okButton.rect.collidepoint(mousePos) == True:
+                            sprite.remove(self.active_message_boxes)
                             
                         
                     
@@ -230,6 +255,8 @@ class Game(object):
 
 
        self.inventoryWindow.draw(self.window)
+
+       self.active_message_boxes.draw(self.window)
 
        pygame.display.flip() #update the surfaces
 
