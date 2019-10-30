@@ -11,7 +11,7 @@ class Game(object):
         pygame.init() #start up pygame
         self.window = pygame.display.set_mode((640, 790)) #set window size to 512, 512
         pygame.display.set_caption("First game") #title window
-        pygame.key.set_repeat(500, 100)
+        pygame.key.set_repeat(1, 80)
         import objects
 
         self.all_sprites = pygame.sprite.Group()
@@ -27,6 +27,7 @@ class Game(object):
         self.props = pygame.sprite.Group()
         self.active_props = pygame.sprite.Group()
         self.active_message_boxes = pygame.sprite.Group() #sprite group to hold active message boxes
+        self.active_enemies = pygame.sprite.Group()
 
         self.message_box_active = False #check if there are active message boxes
 
@@ -48,6 +49,41 @@ class Game(object):
 
         self.clock = pygame.time.Clock()
 
+        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
+        self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
+        self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
+
+        broken_gauntlets_statreq = {"STR": 1, "DEX": 500, "AGL": 0, "INT": 0}
+
+        broken_cuirass_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
+
+        broken_gauntlets_elembonus = {"LIGHT": 12, "DARK": 0, "FIRE": 0, "ICE": 0}
+
+        broken_cuirass_elembonus = {"LIGHT": 2, "DARK": 3, "FIRE": 0, "ICE": 0}
+
+
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+
+        broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
+
+        broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
+
+        self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword_back.png", "broken_sword_front.png", "broken_sword_left.png", "broken_sword_right.png", "broken_sword_32x32.png", "broken_sword_equip.png", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.") 
+
+        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_sword] #create very basic inventory array
+        
+        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
+
+        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+
+        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+
+
+        room_1_enemies = [self.goblin, self.goblin_2]
+        
+
         self.rightDoor = Door(self, 9, 4, "right", True, "chasm_door_right.png", "chasm_wall_right.png" ) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
         self.leftDoor = Door(self, 0, 4, "left", True, "chasm_door_left.png", "chasm_wall_left.png")
         self.forwardDoor = Door(self, 4, 0, "forward", True, "chasm_door_top.png", "chasm_wall_top.png")
@@ -55,11 +91,11 @@ class Game(object):
         
         self.display_inventory = False #flag to check whether the inventory window is open or not
         
-        self.z1r1 = Room(self, "base", [self.backwardDoor], "chasm_01.png", objects.props_z1r1) #initialize some basic rooms, each with a different background image to tell them apart.
+        self.z1r1 = Room(self, "base", [self.backwardDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r1, room_1_enemies) #initialize some basic rooms, each with a different background image to tell them apart.
         #enter a list of doors to represent the doors of the room.
-        self.z2r2 = Room(self, "base", [self.backwardDoor, self.forwardDoor, self.rightDoor], "chasm_02.png", objects.props_z1r2)
-        self.z3r3 = Room(self, "base", [self.forwardDoor], "chasm_03.png", objects.props_z1r3)
-        self.z4r4 = Room(self, "base", [self.leftDoor], "chasm_04.png", objects.props_z1r4)
+        self.z2r2 = Room(self, "base", [self.backwardDoor, self.forwardDoor, self.rightDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r2, [])
+        self.z3r3 = Room(self, "base", [self.forwardDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r3, [])
+        self.z4r4 = Room(self, "base", [self.leftDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r4, [])
         
         self.ZONE1 = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, self.z1r1, 0, 0, 0, 0], [0, self.z2r2, self.z4r4, 0, 0, 0], [0, self.z3r3, 0, 0, 0, 0]]
 
@@ -75,34 +111,25 @@ class Game(object):
 
         #create some random items
         
-        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
-        self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
-        self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
-
-        broken_gauntlets_statreq = {"STR": 1, "DEX": 500, "AGL": 0, "INT": 0}
-
-        broken_cuirass_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
         
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_statreq, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+         
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_statreq, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
-
-        broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
-
-        broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
-
-        self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword_back.png", "broken_sword_front.png", "broken_sword_left.png", "broken_sword_right.png", "broken_sword_32x32.png", "broken_sword_equip.png", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.") 
+         
 
         pygame.font.init()
 
+        self.clock = pygame.time.Clock()
+
     def new(self):
 
-        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_sword] #create very basic inventory array
         
-        self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
+
+        
 
         self.statusbar = statusBar(self, self.player, 0, 640)
+
+        self.statusbar.updateBonuses()
 
         self.startingRoom = self.ZONE1[self.player.roomLocation[0]][self.player.roomLocation[1]] #access the 2D array "ZONE1" above and get the room that the player starts in
 
@@ -123,8 +150,11 @@ class Game(object):
         while self.playing == True:
             #pygame.time.delay(100) #while self.playing == true, delay + run self.events()
             self.events() #call the events method below
+            self.move_enemies()
+
             self.draw() #call the draw method below
             self.update()
+            self.clock.tick(25)
             
             
             
@@ -133,20 +163,25 @@ class Game(object):
             if event.type == pygame.QUIT: 
                 self.quit() #if the event is "quit" run the method self.quit()
             if event.type == pygame.KEYDOWN:
+
+                
                 
                 if event.key == pygame.K_ESCAPE:
                     self.quit()
-                if event.key == pygame.K_LEFT and self.player.x > 64 and self.checkPropCollisions() == False:
+                if event.key == pygame.K_LEFT and self.player.x > 64 and self.checkPropCollisions("left") == False:
                     self.player.move(-10, 0)
+               
                     
-                if event.key == pygame.K_RIGHT and self.player.x < 512 and self.checkPropCollisions() == False:
-                    
+                if event.key == pygame.K_RIGHT and self.player.x < 512 and self.checkPropCollisions("right") == False:
                     self.player.move(10, 0)
+                
+
                         
-                if event.key == pygame.K_UP and self.player.y > 64 and self.checkPropCollisions() == False:
+                if event.key == pygame.K_UP and self.player.y > 64 and self.checkPropCollisions("up") == False:
                     self.player.move(0, -10)
+               
                     
-                if event.key == pygame.K_DOWN and self.player.y < 512 and self.checkPropCollisions() == False:
+                if event.key == pygame.K_DOWN and self.player.y < 512 and self.checkPropCollisions("down") == False:
                     self.player.move(0, 10)
                 
                 if event.key == pygame.K_e:
@@ -237,6 +272,10 @@ class Game(object):
             pygame.draw.line(self.window, (100, 100, 100), (0, y), (512, y))
             #draw a light grey line on the window from each y to the right of the screen.
 
+    def move_enemies(self):
+        for enemy in self.active_enemies.sprites():
+            enemy.move()
+
     def draw(self):
        
        
@@ -253,6 +292,8 @@ class Game(object):
 
        self.entities.draw(self.window) #draw all entities
 
+       self.active_enemies.draw(self.window)
+
 
        self.inventoryWindow.draw(self.window)
 
@@ -260,13 +301,38 @@ class Game(object):
 
        pygame.display.flip() #update the surfaces
 
-    def checkPropCollisions(self):
+    def callUpdateStatusBar(self):
+        self.statusbar.updateBonuses()
+
+    def checkPropCollisions(self, direction):
+        #collides = False
+        #for prop in self.active_props.sprites():
+        #    if pygame.sprite.collide_rect(self.player, prop) == True:
+        #        collides = True
+
+        #return collides
         collides = False
-        for prop in self.active_props.sprites():
+    
+        for prop in self.active_props.sprites(): #this code works for some reason. I have no idea why. It just does.
             if pygame.sprite.collide_rect(self.player, prop) == True:
-                collides = True
+                if direction == "left":
+                    if prop.x < self.player.x:
+                        collides = True
+                elif direction == "right":
+                    if prop.x > self.player.x:
+                        collides = True
+                elif direction == "up":
+                    if prop.y < self.player.y:
+                        collides = True
+                elif direction == "down":
+                    if prop.y > self.player.y:
+                        collides = True
 
         return collides
+            
+
+        
+        
 
     def toggleInventoryVisibility(self):
         if self.display_inventory == True:
@@ -334,6 +400,9 @@ class Game(object):
 
         for prop in self.active_props.sprites(): #remove all of the previous room's props as well
             prop.remove(self.active_props)
+
+        for enemy in self.active_enemies.sprites():
+            enemy.remove(self.active_enemies)
         
         for x in range(0, 8):
             for y in range(0, 8):
@@ -365,6 +434,11 @@ class Game(object):
 
         for prop in self.activeRoom.props:
             prop.add(self.active_props)
+
+        for enemy in self.activeRoom.enemies:
+            enemy.add(self.active_enemies)
+
+        self.player.background = self.activeRoom.full_background_image
             
 
         

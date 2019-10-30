@@ -88,7 +88,9 @@ class Player(pygame.sprite.Sprite):
         self.lWeapon = lWeapon
 
         self.rWeapon = rWeapon
-        
+
+        self.background = pygame.image.load("chasm_01_full.png").convert() #load full background image
+
         
 
     def move(self, x, y):
@@ -97,6 +99,8 @@ class Player(pygame.sprite.Sprite):
         self.walkAnim(x, y) #play the walking animation (See below)
         self.x += x #move player left/right
         self.y += y #move player right/left
+
+
 
     def takeDamage(self, DMG):
         self.HP = self.HP - DMG
@@ -130,6 +134,7 @@ class Player(pygame.sprite.Sprite):
             self.armArmor = armor
         elif armor.region == "legs":
             self.legArmor = armor
+        self.game.callUpdateStatusBar()
 
     def equipWeapon(self, weapon):
         if weapon.hand == "left":
@@ -153,6 +158,54 @@ class Player(pygame.sprite.Sprite):
             self.lWeapon = None
         elif hand == "rweapon":
             self.rWeapon = None
+
+    def getElemDef(self):
+        
+        light = 0
+        dark = 0
+        fire = 0
+        ice = 0
+
+        armors = [self.headArmor, self.torsoArmor, self.armArmor, self.legArmor]
+
+        for armor in armors:
+            if armor != None:
+                print(armor.name)
+                light += armor.elemBonus["LIGHT"]
+                dark += armor.elemBonus["DARK"]
+                fire += armor.elemBonus["FIRE"]
+                ice += armor.elemBonus["ICE"]
+            else:
+                continue
+
+        elemDefArray = [light, dark, fire, ice]
+
+        return elemDefArray
+
+    def getElemATTKLeft(self):
+        if self.lWeapon == None:
+            empty = [0, 0, 0, 0]
+            return empty
+        else:
+            light = self.lWeapon.elemBonus["LIGHT"]
+            dark = self.lWeapon.elemBonus["DARK"]
+            fire = self.lWeapon.elemBonus["FIRE"]
+            ice = self.lWeapon.elemBonus["ICE"]
+            elemATTKLeftArray = [light, dark, fire, ice]
+            return elemATTKLeftArray
+
+    def getElemATTKRight(self):
+        if self.rWeapon == None:
+            empty = [0, 0, 0, 0]
+            return empty
+        else:
+            light = self.rWeapon.elemBonus["LIGHT"]
+            dark = self.rWeapon.elemBonus["DARK"]
+            fire = self.rWeapon.elemBonus["FIRE"]
+            ice = self.rWeapon.elemBonus["ICE"]
+            elemATTKRightArray = [light, dark, fire, ice]
+            return elemATTKRightArray
+        
         
     def walkAnim(self, x, y):
         if x < 0: #if the player walks to the left (change in x pos less than 0)
@@ -282,17 +335,143 @@ class Player(pygame.sprite.Sprite):
 
     def replaceBackground(self, direction):
         
-        background = pygame.image.load("chasm_01_full.png").convert() #load full background image
 
         #all of the coordinates are offset because the main game map is centered in the screen
         if direction == "right":
-            self.image.blit(background, (0, 0), (self.x - 54, self.y - 64, 64, 64)) #get the section of background where the player is and blit it onto the image
+            self.image.blit(self.background, (0, 0), (self.x - 54, self.y - 64, 64, 64)) #get the section of background where the player is and blit it onto the image
         elif direction == "left":
-            self.image.blit(background, (0, 0), (self.x - 74, self.y - 64, 64, 64)) #get the section of background where hte player is and blit it onto the image
+            self.image.blit(self.background, (0, 0), (self.x - 74, self.y - 64, 64, 64)) #get the section of background where hte player is and blit it onto the image
         elif direction == "down":
-            self.image.blit(background, (0, 0), (self.x - 64, self.y - 54, 64, 64))
+            self.image.blit(self.background, (0, 0), (self.x - 64, self.y - 54, 64, 64))
         elif direction == "up":
-            self.image.blit(background, (0, 0), (self.x - 64, self.y - 74, 64, 64))
+            self.image.blit(self.background, (0, 0), (self.x - 64, self.y - 74, 64, 64))
+
+
+
+class Enemy(pygame.sprite.Sprite): #create enemy class
+
+    def __init__(self, game, player, x, y, speed, name, image, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.player = player
+
+        self.x = x
+
+        self.y = y
+
+        self.name = name
+
+        self.image = pygame.image.load(image).convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+        self.speed = speed
+
+        self.enemyWalkForward = spriteSheet(forwardSpriteSheetName, 6, 1)
+
+        self.enemyWalkForwardList = self.enemyWalkForward.getSpriteList()
+
+        self.walkForwardCount = 0
+
+        self.enemyWalkBackward = spriteSheet(backwardSpriteSheetName, 6, 1)
+
+        self.enemyWalkBackwardList = self.enemyWalkBackward.getSpriteList()
+
+        self.walkBackwardCount = 0
+
+        self.enemyWalkLeft = spriteSheet(leftSpriteSheetName, 8, 1)
+
+        self.enemyWalkLeftList = self.enemyWalkLeft.getSpriteList()
+
+        self.walkLeftCount = 0
+
+        self.enemyWalkRight = spriteSheet(rightSpriteSheetName, 8, 1)
+
+        self.enemyWalkRightList = self.enemyWalkRight.getSpriteList()
+
+        self.walkRightCount = 0
+
+        self.background = pygame.image.load("chasm_01_full.png").convert() #load full background image
+        
+
+
+    def move(self):
+        directionVector = pygame.math.Vector2(self.player.rect.x - self.rect.x, self.player.rect.y - self.rect.y)
+        directionVector.normalize()
+        directionVector.scale_to_length(3)
+        self.rect.move_ip(directionVector)
+        self.walkAnim(directionVector.x, directionVector.y)
+        
+
+
+    def walkAnim(self, x, y):
+        absX = abs(x)
+        absY = abs(y)
+
+        if absX > absY:
+            if x < 0:
+                #print("walking left")
+                if self.walkLeftCount < len(self.enemyWalkLeftList):
+                    leftSpriteTuple = self.enemyWalkLeftList[self.walkLeftCount]
+                    self.replaceBackground("left") #DONT FORGET TO IMPLEMENT THIS!!!!
+                    self.enemyWalkLeft.draw(self.image, leftSpriteTuple[0], leftSpriteTuple[1])                    
+                    if self.walkLeftCount == len(self.enemyWalkLeftList) - 1:
+                        self.walkLeftCount = 0
+                    else:
+                        self.walkLeftCount += 1
+            if x > 0:
+                #print("walking right")
+                if self.walkRightCount < len(self.enemyWalkRightList):
+                    rightSpriteTuple = self.enemyWalkRightList[self.walkRightCount]
+                    self.replaceBackground("right") #DONT FORGET TO IMPLEMENT THIS!!!!
+                    self.enemyWalkRight.draw(self.image, rightSpriteTuple[0], rightSpriteTuple[1])                    
+                    if self.walkRightCount == len(self.enemyWalkRightList) - 1:
+                        self.walkRightCount = 0
+                    else:
+                        self.walkRightCount += 1
+        else:
+            if y > 0:
+                #print("walking up")
+                if self.walkForwardCount < len(self.enemyWalkForwardList):
+                    upSpriteTuple = self.enemyWalkForwardList[self.walkForwardCount]
+                    self.replaceBackground("down")
+                    self.enemyWalkForward.draw(self.image, upSpriteTuple[0], upSpriteTuple[1])
+                    if self.walkForwardCount == len(self.enemyWalkForwardList) - 1:
+                        self.walkForwardCount = 0
+                    else:
+                        self.walkForwardCount += 1
+            if y < 0:
+                #print("walking down")
+                if self.walkBackwardCount < len(self.enemyWalkBackwardList):
+                    downSpriteTuple = self.enemyWalkBackwardList[self.walkBackwardCount]
+                    self.replaceBackground("up")
+                    self.enemyWalkBackward.draw(self.image, downSpriteTuple[0], downSpriteTuple[1])
+                    if self.walkBackwardCount == len(self.enemyWalkBackwardList) - 1:
+                        self.walkBackwardCount = 0
+                    else:
+                        self.walkBackwardCount += 1
+
+    def replaceBackground(self, direction):
+        
+
+        #all of the coordinates are offset because the main game map is centered in the screen
+        if direction == "right":
+            self.image.blit(self.background, (0, 0), (self.rect.x - 61, self.rect.y - 64, 64, 64)) #get the section of background where the player is and blit it onto the image
+        elif direction == "left":
+            self.image.blit(self.background, (0, 0), (self.rect.x - 67, self.rect.y - 64, 64, 64)) #get the section of background where hte player is and blit it onto the image
+        elif direction == "down":
+            self.image.blit(self.background, (0, 0), (self.rect.x - 64, self.rect.y - 61, 64, 64))
+        elif direction == "up":
+            self.image.blit(self.background, (0, 0), (self.rect.x - 64, self.rect.y - 67, 64, 64))
+                 
 
 class spriteSheet(object): #create spriteSheet class to handle sprite sheets
     def __init__(self, filename, cols, rows): #constructor with arguments filename, rows, and columns
@@ -393,8 +572,9 @@ class Equipable(pygame.sprite.Sprite):
         self.backwardSpriteSheet = self.animWalkBackward.getSpriteList()
 
 class Armor(Equipable):
-    def __init__(self, game, name, x, y, statReq, region, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
+    def __init__(self, game, name, x, y, elemBonus, statReq, region, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
         super().__init__(game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description)
+        self.elemBonus = elemBonus
         self.region = region
         
 class Weapon(Equipable):
@@ -488,18 +668,24 @@ class Door(pygame.sprite.Sprite):
     
 
 class Room(object):
-    def __init__(self, game, base, door, background, props):
+    def __init__(self, game, base, door, background, full_background, props, enemies):
         self.base = base
         self.door = door #list of doors that this room has
         self.game = game 
 
         self.background = background #filename of the background image for this room's tiles
 
+        self.full_background = full_background
+
+        self.full_background_image = pygame.image.load(self.full_background).convert_alpha()
+
         self.doors = door
 
         rows, cols = (8, 8)
 
         self.props = props
+
+        self.enemies = enemies
 
         #initialize array the manual way
         self.tiles = [[0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0], [0, 0, 0, 0, 0, 0, 0 ,0]]
@@ -670,6 +856,29 @@ class statusBar(pygame.sprite.Sprite):
         self.image.blit(intelligence, (157, 126))
         self.image.blit(dexterity, (273, 87))
         self.image.blit(guard, (274, 107))
+
+    def updateBonuses(self):
+        pygame.font.init()
+
+        font1 = pygame.font.SysFont("Times New Roman", 12)\
+
+        blank = pygame.image.load("blank_bonus.png").convert_alpha()
+        
+        armorElemBonuses = self.player.getElemDef()
+
+        lWeaponElemBonuses = self.player.getElemATTKLeft()
+
+        rWeaponElemBonuses = self.player.getElemATTKRight()
+
+        resistance_x = 473
+        resistance_y = 36
+        for resistance in armorElemBonuses:
+            self.image.blit(blank, (resistance_x, resistance_y))
+            resistanceText = font1.render(str(resistance), False, (255, 255, 255))
+            self.image.blit(resistanceText, (resistance_x, resistance_y))
+            resistance_y += 16
+
+        
 
 
 class textWrapper(object):
