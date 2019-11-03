@@ -167,14 +167,18 @@ class Game(object):
         self.playing = True #initialize "self.playing" to true
         while self.playing == True:
             #pygame.time.delay(100) #while self.playing == true, delay + run self.events()
-            self.events() #call the events method below
+            if self.battle == False:
+                self.events() #call the events method below
+            else:
+                self.battleEvents()
             if self.battle == False:
                 self.move_enemies()
 
             self.draw() #call the draw method below
             if self.battle == True:
                 self.battleEvent.add(self.active_battle)
-                self.battleEvent.fight()
+                
+            
             self.update()
             self.clock.tick(25)
             
@@ -285,6 +289,20 @@ class Game(object):
             self.checkEnemyCollisions()
             
         pygame.display.flip()
+
+    def battleEvents(self):
+        PRINT_EVENT = pygame.USEREVENT
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    
+                    pygame.time.set_timer(PRINT_EVENT, 1000)
+            if event.type == PRINT_EVENT:
+                    print("The event happened!")
+                
+            
                     
     def quit(self):
         pygame.quit() #quit pygame

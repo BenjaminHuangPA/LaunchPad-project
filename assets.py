@@ -1007,8 +1007,7 @@ class Battle(pygame.sprite.Sprite):
 
         self.rect.y = y
 
-    def fight(self):
-        print("run")
+
         
                          
         
