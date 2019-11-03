@@ -4,13 +4,12 @@ from assets import *
 #import objects
 
 
-
 class Game(object):
 
     def __init__(self):
         pygame.init() #start up pygame
         self.window = pygame.display.set_mode((640, 790)) #set window size to 512, 512
-        pygame.display.set_caption("First game") #title window
+        pygame.display.set_caption("Search") #title window
         pygame.key.set_repeat(1, 80)
         import objects
 
@@ -27,9 +26,14 @@ class Game(object):
         self.props = pygame.sprite.Group()
         self.active_props = pygame.sprite.Group()
         self.active_message_boxes = pygame.sprite.Group() #sprite group to hold active message boxes
+        self.active_option_boxes = pygame.sprite.Group()
         self.active_enemies = pygame.sprite.Group()
 
+        self.active_ground_items = pygame.sprite.Group()
+
         self.message_box_active = False #check if there are active message boxes
+
+        self.active_battle = pygame.sprite.Group()
 
         #for prop in objects.cave_plants:
         #    self.props.add(prop)
@@ -49,11 +53,12 @@ class Game(object):
 
         self.clock = pygame.time.Clock()
 
-        self.apple = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
-        self.apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
-        self.apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
+        apple = item(self, 91, 91, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
+        apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
+        apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
 
-        broken_gauntlets_statreq = {"STR": 1, "DEX": 500, "AGL": 0, "INT": 0}
+
+        broken_gauntlets_statreq = {"STR": 1, "DEX": 0, "AGL": 0, "INT": 0}
 
         broken_cuirass_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
 
@@ -61,24 +66,35 @@ class Game(object):
 
         broken_cuirass_elembonus = {"LIGHT": 2, "DARK": 3, "FIRE": 0, "ICE": 0}
 
+        broken_greaves_statreq = {"STR": 0, "DEX": 0, "AGL": 0, "INT": 0}
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "head", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+        broken_greaves_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "arms", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+        cracked_helmet_elembonus = {"LIGHT": 12, "DARK": 0, "FIRE": 0, "ICE": 0}
 
+        cracked_helmet_statreq = {"STR": 0, "DEX": 0, "AGL": 0, "INT": 0}
+
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "arms", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "torso", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+
+        self.broken_greaves = Armor(self, "Broken greaves", 64, 64, broken_greaves_elembonus, broken_greaves_statreq, "legs", "broken_greaves_back.png", "broken_greaves_front.png", "broken_greaves_left.png", "broken_greaves_right.png", "broken_greaves_32x32.png", "broken_greaves_game.png", 8, "A pair of broken greaves.")
+
+        self.cracked_helmet = Armor(self, "Cracked helmet", 64, 64, cracked_helmet_elembonus, cracked_helmet_statreq, "head", "cracked_helmet_back.png", "cracked_helmet_front.png", "cracked_helmet_left.png", "cracked_helmet_right.png", "cracked_helmet_32x32.png", "cracked_helmet_equip.png", 8, "A cracked helmet.")
+        
         broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
 
         broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
 
         self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword_back.png", "broken_sword_front.png", "broken_sword_left.png", "broken_sword_right.png", "broken_sword_32x32.png", "broken_sword_equip.png", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.") 
 
-        inventory = [self.apple, self.apple2, self.apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_sword] #create very basic inventory array
+        inventory = [apple, apple2, apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_greaves, self.cracked_helmet, self.broken_sword] #create very basic inventory array
         
         self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
 
-        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, "Beast", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
 
-        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, "Beast", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
 
 
         room_1_enemies = [self.goblin, self.goblin_2]
@@ -99,6 +115,8 @@ class Game(object):
         
         self.ZONE1 = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, self.z1r1, 0, 0, 0, 0], [0, self.z2r2, self.z4r4, 0, 0, 0], [0, self.z3r3, 0, 0, 0, 0]]
 
+        self.battle = False
+
         #create a 2D array of rooms to represent this zone.
 
         #self.currentLocation = 
@@ -112,9 +130,9 @@ class Game(object):
         #create some random items
         
         
-
-         
-
+        #messages = ["Yes", "No", None, None]
+        #dialogBox = optionBox(self, 64, 512, self.player, messages, "Will you accept the blessing?")
+        #dialogBox.add(self.active_option_boxes)
          
 
         pygame.font.init()
@@ -150,9 +168,13 @@ class Game(object):
         while self.playing == True:
             #pygame.time.delay(100) #while self.playing == true, delay + run self.events()
             self.events() #call the events method below
-            self.move_enemies()
+            if self.battle == False:
+                self.move_enemies()
 
             self.draw() #call the draw method below
+            if self.battle == True:
+                self.battleEvent.add(self.active_battle)
+                self.battleEvent.fight()
             self.update()
             self.clock.tick(25)
             
@@ -216,7 +238,7 @@ class Game(object):
                     rWeaponRect = pygame.Rect(383, 310, 64, 64)
 
                     if self.inventory.dropButton.rect.collidepoint(mousePos) == True: #check if drop button clicked
-                        
+                        self.inventory.drop()
                         print("Drop button clicked!")
                     elif self.inventory.equipButton.rect.collidepoint(mousePos) == True: #check if equip button clicked
                         print("Equip button clicked!")
@@ -254,10 +276,14 @@ class Game(object):
                     for sprite in self.active_message_boxes.sprites():
                         if sprite.okButton.rect.collidepoint(mousePos) == True:
                             sprite.remove(self.active_message_boxes)
-                            
+                for optionBox in self.active_option_boxes:
+                    print(optionBox.checkClicked(mousePos[0], mousePos[1]))
                         
                     
             self.checkCollisions()
+            self.checkItemCollisions()
+            self.checkEnemyCollisions()
+            
         pygame.display.flip()
                     
     def quit(self):
@@ -276,12 +302,28 @@ class Game(object):
         for enemy in self.active_enemies.sprites():
             enemy.move()
 
+    def droppedItems(self, item):
+
+        print("method run!")
+        print(self.player.x)
+        print(self.player.y)
+        item.x = self.player.x - 20
+        item.y = self.player.y + 30
+        item.rect.x = item.x
+        item.rect.y = item.y
+        print(item.x)
+        print(item.y)
+        item.add(self.active_ground_items)
+
+
     def draw(self):
        
        
        self.draw_grid() #call the draw_grid method
 
        self.status_bar.draw(self.window)
+
+
        
        self.active_tiles.draw(self.window) #draw all tiles in the active_tiles group
        self.active_doors.draw(self.window)
@@ -295,9 +337,16 @@ class Game(object):
        self.active_enemies.draw(self.window)
 
 
+       self.active_ground_items.draw(self.window)
+
+       self.active_option_boxes.draw(self.window)
+
+
        self.inventoryWindow.draw(self.window)
 
        self.active_message_boxes.draw(self.window)
+
+       self.active_battle.draw(self.window)
 
        pygame.display.flip() #update the surfaces
 
@@ -330,9 +379,28 @@ class Game(object):
 
         return collides
             
+    def checkItemCollisions(self):
+        hasCollided = False
+        itemName = None
+        for item in self.active_ground_items.sprites():
+            if pygame.sprite.collide_rect(self.player, item) == True:
+                itemName = item.name
+                hasCollided = True
+        if hasCollided == True:
+            messages = ["Pick up", "Leave", None, None]
+            mainMessage = "Pick up " + itemName + "?"
+            if len(self.active_option_boxes.sprites()) < 1:
+                pickUpItem = optionBox(self, 64, 448, self.player, messages, mainMessage)
+            
+        else:
+            self.active_option_boxes.empty()
 
-        
-        
+            
+    def checkEnemyCollisions(self):
+        for enemy in self.active_enemies.sprites():
+            if pygame.sprite.collide_rect(self.player, enemy) == True:
+                self.battle = True
+                self.battleEvent = Battle(self, self.player, enemy, 0, 0) 
 
     def toggleInventoryVisibility(self):
         if self.display_inventory == True:
