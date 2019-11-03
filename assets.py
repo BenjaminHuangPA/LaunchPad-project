@@ -1003,8 +1003,9 @@ class Battle(pygame.sprite.Sprite):
 
         self.rect.y = y
 
-    def fight(self):
-        while(self.enemy.HP
+    
+        
+        
         
                          
         
