@@ -152,6 +152,8 @@ class Player(pygame.sprite.Sprite):
             self.armArmor = None
         elif region == "legs":
             self.legArmor = None
+        self.game.callUpdateStatusBar()
+
 
     def unequipWeapon(self, hand):
         if hand == "lweapon":
@@ -346,11 +348,20 @@ class Player(pygame.sprite.Sprite):
         elif direction == "up":
             self.image.blit(self.background, (0, 0), (self.x - 64, self.y - 74, 64, 64))
 
+    def dropItem(self, item):
+        print("item dropped")
+        self.game.droppedItems(item)
+        self.inventory.remove(item)
+
+    def pickUpItem(self, item):
+        print("item picked up")
+        
+
 
 
 class Enemy(pygame.sprite.Sprite): #create enemy class
 
-    def __init__(self, game, player, x, y, speed, name, image, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName):
+    def __init__(self, game, player, x, y, speed, name, HP, classification, image, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName):
         self.groups = game.all_sprites
 
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -364,6 +375,10 @@ class Enemy(pygame.sprite.Sprite): #create enemy class
         self.y = y
 
         self.name = name
+
+        self.HP = HP
+
+        self.classification = classification
 
         self.image = pygame.image.load(image).convert_alpha()
 
@@ -729,9 +744,9 @@ class item(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
-        self.rect.x = 32 
+        self.rect.x = x
 
-        self.rect.y = 32
+        self.rect.y = y
 
 class Prop(pygame.sprite.Sprite): #props are just background images, like tables or chairs
     def __init__(self, x, y, name, value, isInteractable, spriteImage):
@@ -874,10 +889,124 @@ class statusBar(pygame.sprite.Sprite):
         resistance_y = 36
         for resistance in armorElemBonuses:
             self.image.blit(blank, (resistance_x, resistance_y))
-            resistanceText = font1.render(str(resistance), False, (255, 255, 255))
+            if resistance < 0:
+                resistanceText = font1.render(str(resistance), False, (242, 35, 12))
+            elif resistance > 0:
+                resistanceText = font1.render(str(resistance), False, (52, 235, 58))
+            else:
+                resistanceText = font1.render(str(resistance), False, (255, 255, 255))
             self.image.blit(resistanceText, (resistance_x, resistance_y))
             resistance_y += 16
 
+        l_attk_bonus_x = 424
+        l_attk_bonus_y = 36
+
+        r_attk_bonus_x = 443
+        r_attk_bonus_y = 36
+
+        for bonus in range(0, 4):
+            self.image.blit(blank, (l_attk_bonus_x, l_attk_bonus_y))
+            self.image.blit(blank, (r_attk_bonus_x, r_attk_bonus_y))
+            l_bonus = lWeaponElemBonuses[bonus]
+            r_bonus = rWeaponElemBonuses[bonus]
+            if l_bonus < 0:
+                l_bonus_text = font1.render(str(l_bonus), False, (242, 35, 12))
+            elif lWeaponElemBonuses[bonus] > 0:
+                l_bonus_text = font1.render(str(l_bonus), False, (52, 235, 58))
+            else:
+                l_bonus_text = font1.render(str(l_bonus), False, (255, 255, 255))
+                
+            if r_bonus < 0:
+                r_bonus_text = font1.render(str(r_bonus), False, (242, 35, 12))
+            elif lWeaponElemBonuses[bonus] > 0:
+                r_bonus_text = font1.render(str(r_bonus), False, (52, 235, 58))
+            else:
+                r_bonus_text = font1.render(str(r_bonus), False, (255, 255, 255))
+
+            self.image.blit(l_bonus_text, (l_attk_bonus_x, l_attk_bonus_y))
+            self.image.blit(r_bonus_text, (r_attk_bonus_x, r_attk_bonus_y))
+
+            l_attk_bonus_y += 16
+            r_attk_bonus_y += 16
+
+class enemyStatusBar(pygame.sprite.Sprite):
+    def __init__(self, game, enemy, x, y):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.enemy = enemy
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load("enemy_status_bar.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+        self.initializeHealthBar()
+
+    def initializeHealthBar(self):
+        healthBarLength = self.enemy.HP / 3
+        healthBarRect = pygame.Rect(176, 62, healthBarLength, 11)
+        pygame.draw.rect(self.image, (141, 42, 42), healthBarRect)
+
+    def initializeText(self):
+        pygame.font.init()
+        name = self.enemy.name
+
+        classification = self.enemy.classification
+
+        nameFont = pygame.font.SysFont("Times New Roman", 30)
+
+        nameText = nameFont.render(name, False, (255, 255, 255))
+
+        self.image.blit(nameText, (110, 13))
+
+        classFont = pygame.font.SysFont("Times New Roman", 20)
+
+        classText = classFont.render(classification, False, (255, 255, 255))
+
+        self.image.blit(classText, (110, 36))
+
+
+class Battle(pygame.sprite.Sprite):
+
+    def __init__(self, game, player, enemy, x, y):
+        self.groups = game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        
+        self.game = game
+
+        self.player = player
+
+        self.enemy = enemy
+
+        self.image = pygame.image.load("battle_screen.png").convert_alpha()
+
+        self.x = x
+
+        self.y = x
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+    def fight(self):
+        print("run")
+        
+                         
         
 
 
@@ -976,7 +1105,94 @@ class messageBox(pygame.sprite.Sprite): #simple class for displayed closeable me
 
         textwrapper.blitText(self.image, 58, 28, message, 296, 22, 20, (255, 255, 255))
     
+class optionBox(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, player, messages, mainMessage):
+        self.groups = game.active_option_boxes
+
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.player = player
+
+        self.messages = messages
+
+        self.mainMessage = mainMessage
+
+        self.x = x
+
+        self.y = y
+
+        self.messages = messages
+
+        self.image = pygame.image.load("dialog_box.png").convert_alpha()
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+        self.buttons = []
         
+        self.initialize()
+        
+
+    def initialize(self):
+
+        pygame.font.init()
+
+        textwrapper = textWrapper()
+
+        
+        if self.messages[1] == None and self.messages[2] == None and self.messages[3] == None: #only one choice
+            self.button1 = Button(self.game, 219, 76, "Message 1", "blank_button.png", 0, 0)
+            self.buttons = [self.button1]
+             
+        elif self.messages[2] == None and self.messages[3] == None: #two choices
+            self.button1 = Button(self.game, 158, 77, "Message 1", "blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 280, 77, "Message 2", "blank_button.png", 0, 0)
+            self.buttons = [self.button1, self.button2]
+            
+        elif self.messages[3] == None:
+            self.button1 = Button(self.game, 97, 77, "Message 1", "blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 219, 77, "Message 2", "blank_button.png", 0, 0)
+            self.button3 = Button(self.game, 341, 77, "Message 3", "blank_button.png", 0, 0)
+            self.buttons = [self.button1, self.button2, self.button3]
+            
+        else:
+            self.button1 = Button(self.game, 73, 77, "Message 1", "blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 171, 77, "Message 2", "blank_button.png", 0, 0)
+            self.button3 = Button(self.game, 269, 77, "Message 3", "blank_button.png", 0, 0)
+            self.button4 = Button(self.game, 367, 77, "Message 4", "blank_button.png", 0, 0)
+            self.buttons = [self.button1, self.button2, self.button3, self.button4]
+            
+        counter = 0
+        for button in self.buttons:
+            textwrapper.blitText(button.image, 6, 3, self.messages[counter], 60, 15, 1, (255, 255, 255))
+            self.image.blit(button.image, (button.x, button.y))
+            counter += 1
+        
+        main_font = pygame.font.SysFont("Times New Roman", 15)
+        main_message_text = main_font.render(self.mainMessage, False, (255, 255, 255))
+        self.image.blit(main_message_text, (46, 30))
+
+    def checkClicked(self, x, y):
+        offsetX = x - self.x
+        offsetY = y - self.y
+        print(offsetX)
+        print(offsetY)
+        for button in self.buttons:
+            print(button.rect)
+            if button.rect.collidepoint(offsetX, offsetY) == True:
+                print("True")
+                return(self.buttons.index(button) + 1)
+
+    #def functions(self, function, *args):
+    #    if function == "Pick up":
+            
+            
+            
         
 
 class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class 
@@ -1038,8 +1254,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             x += 34 #increment the x coordinate by 34 to draw the next item in the next box over
             if x == 262: 
                 x = 24
-                y = 34
-            #if reached the end of the row, go to the next row
+                y += 34            #if reached the end of the row, go to the next row
 
     def initializeButtons(self): #blit button sprites to the screen
         self.image.blit(self.dropButton.image, (self.dropButton.x, self.dropButton.y))
@@ -1103,13 +1318,16 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
                 if self.currentSelection.type == "armor":
                     if self.currentSelection.region == "head":
                         self.image.blit(self.currentSelection.equipImage, (406, 18))
+                        print("Helmet equipped!")
                     elif self.currentSelection.region == "torso":
                         self.image.blit(self.currentSelection.equipImage, (406, 100))
+                        print("Chestplate equipped!")
                     elif self.currentSelection.region == "arms":
                         self.image.blit(self.currentSelection.equipImage, (406, 182))
+                        print("Gauntlets equipped!")
                     elif self.currentSelection.region == "legs":
-                        self.image.blit(self.currentSelection.equipImage, (407, 864))
-
+                        self.image.blit(self.currentSelection.equipImage, (407, 264))
+                        print("Greaves equipped!")
                     self.player.equipArmor(self.currentSelection)
                 elif self.currentSelection.type == "weapon":
                     if self.currentSelection.hand == "left":
@@ -1122,6 +1340,14 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
                 if self.player.canEquip(self.currentSelection) != True:
                     message = "Your " + self.player.canEquip(self.currentSelection) + " is not high enough to equip this item."
                     statBox = messageBox(self.game, self.player, 66, 128, message)
+
+    def drop(self):
+        #drop items
+        self.player.dropItem(self.currentSelection)
+        blank_inventory = pygame.image.load("blank_inventory.png").convert_alpha()
+        self.image.blit(blank_inventory, (22, 20))
+        self.fill()
+            
                 
                 
 
