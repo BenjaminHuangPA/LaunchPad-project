@@ -1,0 +1,18 @@
+./img is the folder where any images go
+
+./img/enemy has a folder for each enemy's image set
+
+./img/horace has horace's image set
+
+./img/items/armor has a folder for each armor set, and each one contains folders for each piece's image set
+./img/items/weapon has a folder for each weapon's image set
+./img/items/consumable has a folder for each item's image set
+./img/items/misc has each item's image
+
+./img/misc has miscellaneous images
+
+./img/props has a folder for each area, then each area has each props' image
+
+./img/tile has a folder for each area, then each area has images for its tileset
+
+./img/manifest.txt is the file you're currently reading

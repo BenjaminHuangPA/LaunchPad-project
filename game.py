@@ -38,10 +38,10 @@ class Game(object):
         #for prop in objects.cave_plants:
         #    self.props.add(prop)
 
-        self.leftwall = pygame.image.load("chasm_wall_left.png").convert()
-        self.rightwall = pygame.image.load("chasm_wall_right.png").convert()
-        self.topwall = pygame.image.load("chasm_wall_top.png").convert()
-        self.bottomwall = pygame.image.load("chasm_wall_bottom.png").convert()
+        self.leftwall = pygame.image.load("img/tile/chasm/chasm_wall_left.png").convert()
+        self.rightwall = pygame.image.load("img/tile/chasm/chasm_wall_right.png").convert()
+        self.topwall = pygame.image.load("img/tile/chasm/chasm_wall_top.png").convert()
+        self.bottomwall = pygame.image.load("img/tile/chasm/chasm_wall_bottom.png").convert()
 
         self.window.blit(self.rightwall, (576, 0))
 
@@ -53,9 +53,9 @@ class Game(object):
 
         self.clock = pygame.time.Clock()
 
-        apple = item(self, 91, 91, "apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
-        apple2 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
-        apple3 = item(self, 64, 64, "apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
+        apple = item(self, 91, 91, "img/items/misc/apple_2.png", 'Apple', 2, 'Here is an unnecessarily long description of an apple. It is entirely to test the function of the textWrapper class', True, 'common', 1)
+        apple2 = item(self, 64, 64, "img/items/misc/apple_2.png", 'Apple', 2, 'Another apple', True, 'common', 1)
+        apple3 = item(self, 64, 64, "img/items/misc/apple_2.png", 'Apple', 2, 'A third apple', True, 'common', 1)
 
 
         broken_gauntlets_statreq = {"STR": 1, "DEX": 0, "AGL": 0, "INT": 0}
@@ -74,44 +74,44 @@ class Game(object):
 
         cracked_helmet_statreq = {"STR": 0, "DEX": 0, "AGL": 0, "INT": 0}
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "arms", "broken_gauntlets_game_back.png", "broken_gauntlets_game_front.png", "broken_gauntlets_game_left.png", "broken_gauntlets_game_right.png", "broken_gauntlets_32x32.png", "broken_gauntlets_game.png", 10, "A pair of broken gauntlets")
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "arms", "broken", "gauntlets", 10, "A pair of broken gauntlets")
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "torso", "broken_cuirass_game_back.png", "broken_cuirass_game_front.png", "broken_cuirass_game_left.png", "broken_cuirass_game_right.png", "broken_cuirass_32x32.png", "broken_cuirass_game.png", 6, "A broken cuirass.")
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "torso", "broken", "cuirass", 6, "A broken cuirass.")
 
-        self.broken_greaves = Armor(self, "Broken greaves", 64, 64, broken_greaves_elembonus, broken_greaves_statreq, "legs", "broken_greaves_back.png", "broken_greaves_front.png", "broken_greaves_left.png", "broken_greaves_right.png", "broken_greaves_32x32.png", "broken_greaves_game.png", 8, "A pair of broken greaves.")
+        self.broken_greaves = Armor(self, "Broken greaves", 64, 64, broken_greaves_elembonus, broken_greaves_statreq, "legs", "broken", "greaves", 8, "A pair of broken greaves.")
 
-        self.cracked_helmet = Armor(self, "Cracked helmet", 64, 64, cracked_helmet_elembonus, cracked_helmet_statreq, "head", "cracked_helmet_back.png", "cracked_helmet_front.png", "cracked_helmet_left.png", "cracked_helmet_right.png", "cracked_helmet_32x32.png", "cracked_helmet_equip.png", 8, "A cracked helmet.")
+        self.cracked_helmet = Armor(self, "Cracked helmet", 64, 64, cracked_helmet_elembonus, cracked_helmet_statreq, "head", "broken", "helmet", 8, "A cracked helmet.")
         
         broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
 
         broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
 
-        self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword_back.png", "broken_sword_front.png", "broken_sword_left.png", "broken_sword_right.png", "broken_sword_32x32.png", "broken_sword_equip.png", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.") 
+        self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.")
 
         inventory = [apple, apple2, apple3, self.broken_gauntlets, self.broken_cuirass, self.broken_greaves, self.cracked_helmet, self.broken_sword] #create very basic inventory array
         
         self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
 
-        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, "Beast", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, "Beast", "goblin")
 
-        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, "Beast", "goblin_front_png.png", "goblin_front.png", "goblin_back.png", "goblin_idle_left.png", "goblin_idle_right.png")
+        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, "Beast", "goblin")
 
 
         room_1_enemies = [self.goblin, self.goblin_2]
         
 
-        self.rightDoor = Door(self, 9, 4, "right", True, "chasm_door_right.png", "chasm_wall_right.png" ) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
-        self.leftDoor = Door(self, 0, 4, "left", True, "chasm_door_left.png", "chasm_wall_left.png")
-        self.forwardDoor = Door(self, 4, 0, "forward", True, "chasm_door_top.png", "chasm_wall_top.png")
-        self.backwardDoor = Door(self, 4, 9, "backward", True, "chasm_door_bottom.png", "chasm_wall_top.png") 
+        self.rightDoor = Door(self, 9, 4, "right", True, "img/tile/chasm/chasm_door_right.png", "img/tile/chasm/chasm_wall_right.png" ) #initialize doors. There will be only four doors, each representing a cardinal direction. A room can have 1-4 doors.
+        self.leftDoor = Door(self, 0, 4, "left", True, "img/tile/chasm/chasm_door_left.png", "img/tile/chasm/chasm_wall_left.png")
+        self.forwardDoor = Door(self, 4, 0, "forward", True, "img/tile/chasm/chasm_door_top.png", "img/tile/chasm/chasm_wall_top.png")
+        self.backwardDoor = Door(self, 4, 9, "backward", True, "img/tile/chasm/chasm_door_bottom.png", "img/tile/chasm/chasm_wall_top.png")
         
         self.display_inventory = False #flag to check whether the inventory window is open or not
         
-        self.z1r1 = Room(self, "base", [self.backwardDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r1, room_1_enemies) #initialize some basic rooms, each with a different background image to tell them apart.
+        self.z1r1 = Room(self, "base", [self.backwardDoor], "img/tile/chasm/chasm_01.png", "img/tile/chasm/chasm_01_full.png", objects.props_z1r1, room_1_enemies) #initialize some basic rooms, each with a different background image to tell them apart.
         #enter a list of doors to represent the doors of the room.
-        self.z2r2 = Room(self, "base", [self.backwardDoor, self.forwardDoor, self.rightDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r2, [])
-        self.z3r3 = Room(self, "base", [self.forwardDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r3, [])
-        self.z4r4 = Room(self, "base", [self.leftDoor], "chasm_01.png", "chasm_01_full.png", objects.props_z1r4, [])
+        self.z2r2 = Room(self, "base", [self.backwardDoor, self.forwardDoor, self.rightDoor], "img/tile/chasm/chasm_01.png", "img/tile/chasm/chasm_01_full.png", objects.props_z1r2, [])
+        self.z3r3 = Room(self, "base", [self.forwardDoor], "img/tile/chasm/chasm_01.png", "img/tile/chasm/chasm_01_full.png", objects.props_z1r3, [])
+        self.z4r4 = Room(self, "base", [self.leftDoor], "img/tile/chasm/chasm_01.png", "img/tile/chasm/chasm_01_full.png", objects.props_z1r4, [])
         
         self.ZONE1 = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, self.z1r1, 0, 0, 0, 0], [0, self.z2r2, self.z4r4, 0, 0, 0], [0, self.z3r3, 0, 0, 0, 0]]
 
@@ -121,7 +121,7 @@ class Game(object):
 
         #self.currentLocation = 
 
-        #self.z1r1 = Room(self, "base", "door", "chasm_01.png") #create a new Room object (see assets.py)
+        #self.z1r1 = Room(self, "base", "door", "img/tile/chasm/chasm_01.png") #create a new Room object (see assets.py)
         #for x in range(0, 8):
         #    for y in range(0, 8):
         #        self.active_tiles.add(self.z1r1.tiles[x][y])
@@ -153,7 +153,7 @@ class Game(object):
 
         self.activeRoom = 0 #initialize the active room to 0 (will later be a room object)
         
-        #self.z1r1 = Room(self, "base", "door", "chasm_01.png") #create a new Room object (see assets.py)
+        #self.z1r1 = Room(self, "base", "door", "img/tile/chasm/chasm_01.png") #create a new Room object (see assets.py)
         for x in range(0, 8):
             for y in range(0, 8):
                 self.active_tiles.add(self.startingRoom.tiles[x][y])

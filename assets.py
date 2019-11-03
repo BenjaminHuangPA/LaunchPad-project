@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
 
         self.roomLocation = [5, 1] #denote where in the gameloop's 2d zone array the player is. i.e. index 1 of array 5.
 
-        self.image = pygame.image.load("test.png").convert_alpha() #.convert_alpha() enables png transparency
+        self.image = pygame.image.load("img/misc/test.png").convert_alpha() #.convert_alpha() enables png transparency
 
         self.rect = self.image.get_rect() #how pygame knows where to draw the sprite (VERY IMPORTANT)
         #get rect returns the size of the sprite's image
@@ -33,25 +33,25 @@ class Player(pygame.sprite.Sprite):
 
         #self.speed = 10
 
-        self.playerWalkLeft = spriteSheet("horace_idle_left_side.png", 8, 1) #initialize spriteSheet object for the player walking to the left
+        self.playerWalkLeft = spriteSheet("img/horace/horace_walk_left.png", 8, 1) #initialize spriteSheet object for the player walking to the left
 
         self.playerWalkLeftList = self.playerWalkLeft.getSpriteList() #get list of coordinates representing the upper left corners of the individiual sprites in the spriteSheet
 
         self.walkLeftCount = 0 
 
-        self.playerWalkRight = spriteSheet("horace_idle_side.png", 8, 1) #initialize spriteSheet object for the player walking to the right
+        self.playerWalkRight = spriteSheet("img/horace/horace_walk_right.png", 8, 1) #initialize spriteSheet object for the player walking to the right
 
         self.playerWalkRightList = self.playerWalkRight.getSpriteList()
 
         self.walkRightCount = 0 
 
-        self.playerWalkForward = spriteSheet("horace_idle_back.png", 6, 1)
+        self.playerWalkForward = spriteSheet("img/horace/horace_walk_back.png", 6, 1)
 
         self.playerWalkForwardList = self.playerWalkForward.getSpriteList() #initialize spriteSheet object for the player walking forward
 
         self.walkForwardCount = 0
 
-        self.playerWalkBackward = spriteSheet("horace_idle.png", 6, 1)
+        self.playerWalkBackward = spriteSheet("img/horace/horace_walk_front.png", 6, 1)
 
         self.playerWalkBackwardList = self.playerWalkBackward.getSpriteList() #initialize spriteSheet object for the player walking backwards
 
@@ -89,7 +89,7 @@ class Player(pygame.sprite.Sprite):
 
         self.rWeapon = rWeapon
 
-        self.background = pygame.image.load("chasm_01_full.png").convert() #load full background image
+        self.background = pygame.image.load("img/tile/chasm/chasm_01_full.png").convert() #load full background image
 
         
 
@@ -361,8 +361,10 @@ class Player(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite): #create enemy class
 
-    def __init__(self, game, player, x, y, speed, name, HP, classification, image, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName):
+    def __init__(self, game, player, x, y, speed, name, HP, classification, fileName):
         self.groups = game.all_sprites
+
+        path = "img/enemy/"+fileName+"/"+fileName
 
         pygame.sprite.Sprite.__init__(self, self.groups)
 
@@ -380,7 +382,7 @@ class Enemy(pygame.sprite.Sprite): #create enemy class
 
         self.classification = classification
 
-        self.image = pygame.image.load(image).convert_alpha()
+        self.image = pygame.image.load(path+"_img.png").convert_alpha()
 
         self.rect = self.image.get_rect()
 
@@ -390,31 +392,31 @@ class Enemy(pygame.sprite.Sprite): #create enemy class
 
         self.speed = speed
 
-        self.enemyWalkForward = spriteSheet(forwardSpriteSheetName, 6, 1)
+        self.enemyWalkForward = spriteSheet(path+"_front.png", 6, 1)
 
         self.enemyWalkForwardList = self.enemyWalkForward.getSpriteList()
 
         self.walkForwardCount = 0
 
-        self.enemyWalkBackward = spriteSheet(backwardSpriteSheetName, 6, 1)
+        self.enemyWalkBackward = spriteSheet(path+"_back.png", 6, 1)
 
         self.enemyWalkBackwardList = self.enemyWalkBackward.getSpriteList()
 
         self.walkBackwardCount = 0
 
-        self.enemyWalkLeft = spriteSheet(leftSpriteSheetName, 8, 1)
+        self.enemyWalkLeft = spriteSheet(path+"_left.png", 8, 1)
 
         self.enemyWalkLeftList = self.enemyWalkLeft.getSpriteList()
 
         self.walkLeftCount = 0
 
-        self.enemyWalkRight = spriteSheet(rightSpriteSheetName, 8, 1)
+        self.enemyWalkRight = spriteSheet(path+"_right.png", 8, 1)
 
         self.enemyWalkRightList = self.enemyWalkRight.getSpriteList()
 
         self.walkRightCount = 0
 
-        self.background = pygame.image.load("chasm_01_full.png").convert() #load full background image
+        self.background = pygame.image.load("img/tile/chasm/chasm_01_full.png").convert() #load full background image
         
 
 
@@ -587,15 +589,17 @@ class Equipable(pygame.sprite.Sprite):
         self.backwardSpriteSheet = self.animWalkBackward.getSpriteList()
 
 class Armor(Equipable):
-    def __init__(self, game, name, x, y, elemBonus, statReq, region, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
-        super().__init__(game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description)
+    def __init__(self, game, displayName, x, y, elemBonus, statReq, region, setName, typeName, value, description):
+        path = "img/items/armor/"+setName+"/"+setName+"_"+typeName+"/"+setName+"_"+typeName
+        super().__init__(game, displayName, x, y, statReq, path+"_game_front.png", path+"_game_back.png", path+"_game_left.png", path+"_game_right.png", path+"_32x32.png", path+"_game.png", value, description)
         self.elemBonus = elemBonus
         self.region = region
         
 class Weapon(Equipable):
 
-    def __init__(self, game, name, x, y, weaponType, hand, weighting, dmgType, rawDMG, critChance, elemBonus, statReq, bonus, specAttack, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description):
-        super().__init__(game, name, x, y, statReq, forwardSpriteSheetName, backwardSpriteSheetName, leftSpriteSheetName, rightSpriteSheetName, itemImage, equipImage, value, description)    
+    def __init__(self, game, displayName, x, y, weaponType, hand, weighting, dmgType, rawDMG, critChance, elemBonus, statReq, bonus, specAttack, fileName, value, description):
+        path = "img/items/weapon/"+fileName+"/"+fileName
+        super().__init__(game, displayName, x, y, statReq, path+"_front.png", path+"_back.png", path+"_left.png", path+"_right.png", path+"_32x32.png", path+"_equip.png", value, description)
         self.weaponType = weaponType
         self.hand = hand
         self.weighting = weighting
@@ -815,7 +819,7 @@ class statusBar(pygame.sprite.Sprite):
 
         self.y = y
 
-        self.image = pygame.image.load("statusBar.png").convert()
+        self.image = pygame.image.load("img/menu/statusBar.png").convert()
 
         self.rect = self.image.get_rect()
 
@@ -877,7 +881,7 @@ class statusBar(pygame.sprite.Sprite):
 
         font1 = pygame.font.SysFont("Times New Roman", 12)\
 
-        blank = pygame.image.load("blank_bonus.png").convert_alpha()
+        blank = pygame.image.load("img/misc/blank_bonus.png").convert_alpha()
         
         armorElemBonuses = self.player.getElemDef()
 
@@ -943,7 +947,7 @@ class enemyStatusBar(pygame.sprite.Sprite):
 
         self.y = y
 
-        self.image = pygame.image.load("enemy_status_bar.png").convert_alpha()
+        self.image = pygame.image.load("img/menu/enemy_status_bar.png").convert_alpha()
 
         self.rect = self.image.get_rect()
 
@@ -991,7 +995,7 @@ class Battle(pygame.sprite.Sprite):
 
         self.enemy = enemy
 
-        self.image = pygame.image.load("battle_screen.png").convert_alpha()
+        self.image = pygame.image.load("img/misc/battle_screen.png").convert_alpha()
 
         self.x = x
 
@@ -1089,7 +1093,7 @@ class messageBox(pygame.sprite.Sprite): #simple class for displayed closeable me
 
         self.message = message
 
-        self.image = pygame.image.load("message_box.png").convert_alpha()
+        self.image = pygame.image.load("img/menu/message_box.png").convert_alpha()
 
         self.rect = self.image.get_rect()
 
@@ -1097,7 +1101,7 @@ class messageBox(pygame.sprite.Sprite): #simple class for displayed closeable me
 
         self.rect.y = y * 1
 
-        self.okButton = Button(self.game, 141, 113, "OK", "ok_button.png", 64, 128)
+        self.okButton = Button(self.game, 141, 113, "OK", "img/menu/ok_button.png", 64, 128)
 
         self.image.blit(self.okButton.image, (self.okButton.x, self.okButton.y))
 
@@ -1125,7 +1129,7 @@ class optionBox(pygame.sprite.Sprite):
 
         self.messages = messages
 
-        self.image = pygame.image.load("dialog_box.png").convert_alpha()
+        self.image = pygame.image.load("img/menu/dialog_box.png").convert_alpha()
 
         self.rect = self.image.get_rect()
 
@@ -1146,25 +1150,25 @@ class optionBox(pygame.sprite.Sprite):
 
         
         if self.messages[1] == None and self.messages[2] == None and self.messages[3] == None: #only one choice
-            self.button1 = Button(self.game, 219, 76, "Message 1", "blank_button.png", 0, 0)
+            self.button1 = Button(self.game, 219, 76, "Message 1", "img/menu/blank_button.png", 0, 0)
             self.buttons = [self.button1]
              
         elif self.messages[2] == None and self.messages[3] == None: #two choices
-            self.button1 = Button(self.game, 158, 77, "Message 1", "blank_button.png", 0, 0)
-            self.button2 = Button(self.game, 280, 77, "Message 2", "blank_button.png", 0, 0)
+            self.button1 = Button(self.game, 158, 77, "Message 1", "img/menu/blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 280, 77, "Message 2", "img/menu/blank_button.png", 0, 0)
             self.buttons = [self.button1, self.button2]
             
         elif self.messages[3] == None:
-            self.button1 = Button(self.game, 97, 77, "Message 1", "blank_button.png", 0, 0)
-            self.button2 = Button(self.game, 219, 77, "Message 2", "blank_button.png", 0, 0)
-            self.button3 = Button(self.game, 341, 77, "Message 3", "blank_button.png", 0, 0)
+            self.button1 = Button(self.game, 97, 77, "Message 1", "img/menu/blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 219, 77, "Message 2", "img/menu/blank_button.png", 0, 0)
+            self.button3 = Button(self.game, 341, 77, "Message 3", "img/menu/blank_button.png", 0, 0)
             self.buttons = [self.button1, self.button2, self.button3]
             
         else:
-            self.button1 = Button(self.game, 73, 77, "Message 1", "blank_button.png", 0, 0)
-            self.button2 = Button(self.game, 171, 77, "Message 2", "blank_button.png", 0, 0)
-            self.button3 = Button(self.game, 269, 77, "Message 3", "blank_button.png", 0, 0)
-            self.button4 = Button(self.game, 367, 77, "Message 4", "blank_button.png", 0, 0)
+            self.button1 = Button(self.game, 73, 77, "Message 1", "img/menu/blank_button.png", 0, 0)
+            self.button2 = Button(self.game, 171, 77, "Message 2", "img/menu/blank_button.png", 0, 0)
+            self.button3 = Button(self.game, 269, 77, "Message 3", "img/menu/blank_button.png", 0, 0)
+            self.button4 = Button(self.game, 367, 77, "Message 4", "img/menu/blank_button.png", 0, 0)
             self.buttons = [self.button1, self.button2, self.button3, self.button4]
             
         counter = 0
@@ -1209,7 +1213,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
 
         self.y = y
 
-        self.image = pygame.image.load("inventory_gui_2_nobuttons.png").convert_alpha()
+        self.image = pygame.image.load("img/menu/inventory_gui_2_nobuttons.png").convert_alpha()
 
         self.rect = self.image.get_rect()
 
@@ -1219,15 +1223,15 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
 
         #initialize various button objects
 
-        self.dropButton = Button(self.game, 20, 298, "drop", "drop_button.png", 64, 128) 
+        self.dropButton = Button(self.game, 20, 298, "drop", "img/menu/drop_button.png", 64, 128)
 
-        self.useButton = Button(self.game, 121, 297, "use", "use_button.png", 64, 128)
+        self.useButton = Button(self.game, 121, 297, "use", "img/menu/use_button.png", 64, 128)
 
-        self.equipButton = Button(self.game, 315, 297, "equip", "equip_button.png", 64, 128)
+        self.equipButton = Button(self.game, 315, 297, "equip", "img/menu/equip_button.png", 64, 128)
 
-        self.inspectButton = Button(self.game, 222, 297, "inspect", "inspect_button.png", 64, 128)
+        self.inspectButton = Button(self.game, 222, 297, "inspect", "img/menu/inspect_button.png", 64, 128)
 
-        self.sellButton = Button(self.game, 315, 265, "sell", "sell_button.png", 64, 128)
+        self.sellButton = Button(self.game, 315, 265, "sell", "img/menu/sell_button.png", 64, 128)
 
         self.initializeButtons() #blit buttons to screen
     
@@ -1239,9 +1243,9 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
 
         self.currentEquipmentSelection = None
 
-        self.selectionImage = pygame.image.load("selected.png").convert_alpha() #load the image to show that an item is selected (red border)
+        self.selectionImage = pygame.image.load("img/menu/selected.png").convert_alpha() #load the image to show that an item is selected (red border)
 
-        self.deselectionImage = pygame.image.load("deselected.png").convert_alpha() #load the image to show that an item has been "deselected" (plain background with no red border)
+        self.deselectionImage = pygame.image.load("img/menu/deselected.png").convert_alpha() #load the image to show that an item has been "deselected" (plain background with no red border)
         
 
     def fill(self): #fill the inventory window with the player's items' sprites
@@ -1287,7 +1291,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             print("Cannot inspect nothing!") #make sure I'm not accessing a thing that isn't of the item class
         else:
             pygame.font.init() #call init to use pygame's font module
-            inspectionWindow = pygame.image.load("inspection_window.png").convert() #load inspection window's image 
+            inspectionWindow = pygame.image.load("img/menu/inspection_window.png").convert() #load inspection window's image
             
             font1 = pygame.font.SysFont('Times New Roman', 9) #create new font object 
             
@@ -1344,7 +1348,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
     def drop(self):
         #drop items
         self.player.dropItem(self.currentSelection)
-        blank_inventory = pygame.image.load("blank_inventory.png").convert_alpha()
+        blank_inventory = pygame.image.load("img/menu/blank_inventory.png").convert_alpha()
         self.image.blit(blank_inventory, (22, 20))
         self.fill()
             
@@ -1352,7 +1356,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
                 
 
     def selectEquipment(self, slot):
-        equipmentSelected = pygame.image.load("equipment_selected.png").convert_alpha()
+        equipmentSelected = pygame.image.load("img/menu/equipment_selected.png").convert_alpha()
         if slot == "head" and self.player.headArmor != None:
             self.image.blit(equipmentSelected, (406, 18))
             self.currentEquipmentSelection = "head"
@@ -1372,7 +1376,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             self.image.blit(equipmentSelected, (319, 182))
             self.currentEquipmentSelection = "rweapon"
             
-        self.equipButton.image = pygame.image.load("unequip_button.png").convert_alpha()
+        self.equipButton.image = pygame.image.load("img/menu/unequip_button.png").convert_alpha()
 
         self.initializeButtons()
 
@@ -1380,7 +1384,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
 
     def unequip(self):
         print("unequip method run")
-        equipmentUnselected = pygame.image.load("nothing_equipped.png").convert_alpha()
+        equipmentUnselected = pygame.image.load("img/menu/nothing_equipped.png").convert_alpha()
         
         if self.currentEquipmentSelection == "head":
             self.player.unequipArmor("head")
@@ -1402,7 +1406,7 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             self.image.blit(equipmentUnselected, (318, 182))
             
 
-        self.equipButton.image = pygame.image.load("equip_button.png").convert_alpha()
+        self.equipButton.image = pygame.image.load("img/menu/equip_button.png").convert_alpha()
 
         self.initializeButtons()
 
