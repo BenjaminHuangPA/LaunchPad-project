@@ -117,6 +117,12 @@ class Game(object):
 
         self.battle = False
 
+        
+
+        self.clock_group = pygame.sprite.Group()
+
+        
+
         #create a 2D array of rooms to represent this zone.
 
         #self.currentLocation = 
@@ -175,8 +181,8 @@ class Game(object):
                 self.move_enemies()
 
             self.draw() #call the draw method below
-            if self.battle == True:
-                self.battleEvent.add(self.active_battle)
+            #if self.battle == True:
+            #    self.battleEvent.add(self.active_battle)
                 
             
             self.update()
@@ -291,16 +297,20 @@ class Game(object):
         pygame.display.flip()
 
     def battleEvents(self):
-        PRINT_EVENT = pygame.USEREVENT
+        CLOCK_TICK = pygame.USEREVENT
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     
-                    pygame.time.set_timer(PRINT_EVENT, 1000)
-            if event.type == PRINT_EVENT:
-                    print("The event happened!")
+                    pygame.time.set_timer(CLOCK_TICK, 1000)
+            if event.type == CLOCK_TICK:
+                    print("Clock ticked!")
+                    
+                    self.battleEvent.clock_tick()
+                    #self.clock1.animate()
+            
                 
             
                     
@@ -366,6 +376,8 @@ class Game(object):
 
        self.active_battle.draw(self.window)
 
+       self.clock_group.draw(self.window)
+
        pygame.display.flip() #update the surfaces
 
     def callUpdateStatusBar(self):
@@ -418,7 +430,8 @@ class Game(object):
         for enemy in self.active_enemies.sprites():
             if pygame.sprite.collide_rect(self.player, enemy) == True:
                 self.battle = True
-                self.battleEvent = Battle(self, self.player, enemy, 0, 0) 
+                self.battleEvent = Battle(self, self.player, enemy, 0, 0)
+                self.battleEvent.add(self.active_battle)
 
     def toggleInventoryVisibility(self):
         if self.display_inventory == True:
@@ -428,6 +441,7 @@ class Game(object):
 
     def update(self):
        self.all_sprites.update()
+       #self.active_battle.update
        #pygame.display.flip()
 
     def checkCollisions(self):
