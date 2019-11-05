@@ -591,7 +591,7 @@ class Equipable(pygame.sprite.Sprite):
 class Armor(Equipable):
     def __init__(self, game, displayName, x, y, elemBonus, statReq, region, setName, typeName, value, description):
         path = "img/items/armor/"+setName+"/"+setName+"_"+typeName+"/"+setName+"_"+typeName
-        super().__init__(game, displayName, x, y, statReq, path+"_game_front.png", path+"_game_back.png", path+"_game_left.png", path+"_game_right.png", path+"_32x32.png", path+"_game.png", value, description)
+        super().__init__(game, displayName, x, y, statReq,path+"_game_back.png", path+"_game_front.png", path+"_game_left.png", path+"_game_right.png", path+"_32x32.png", path+"_game.png", value, description)
         self.elemBonus = elemBonus
         self.region = region
         
@@ -599,12 +599,12 @@ class Weapon(Equipable):
 
     def __init__(self, game, displayName, x, y, weaponType, hand, weighting, dmgType, rawDMG, critChance, elemBonus, statReq, bonus, specAttack, fileName, value, description):
         path = "img/items/weapon/"+fileName+"/"+fileName
-        super().__init__(game, displayName, x, y, statReq, path+"_front.png", path+"_back.png", path+"_left.png", path+"_right.png", path+"_32x32.png", path+"_equip.png", value, description)
+        super().__init__(game, displayName, x, y, statReq, path+"_back.png", path+"_front.png", path+"_left.png", path+"_right.png", path+"_32x32.png", path+"_equip.png", value, description)
         self.weaponType = weaponType
         self.hand = hand
         self.weighting = weighting
         self.dmgType = dmgType
-        self.rawDMg = rawDMG
+        self.rawDMG = rawDMG
         self.critChance = critChance
         self.elemBonus = elemBonus
         self.bonus = bonus
@@ -781,8 +781,64 @@ class Prop(pygame.sprite.Sprite): #props are just background images, like tables
 
         self.rect.y = y
 
-    
 
+##class Animatable2(pygame.sprite.Sprite):
+##    def __init__(self, x, y, game, name, value, isInteractable, spriteImage, spriteSheetName, rows, cols, animDelay, bg):
+##
+##        self.groups = game.all_sprites
+##
+##        pygame.sprite.Sprite.__init__(self)
+##
+##        self.x = x
+##
+##        self.y = y
+##
+##        self.image = pygame.image.load(spriteImage).convert_alpha()
+##
+##        self.rect = self.image.get_rect()
+    
+class Animatable(Prop): #this subclass of prop is for things that are animated. 
+    def __init__(self, x, y, game, name, value, isInteractable, spriteImage, spriteSheetName, rows, cols, animDelay, bg):
+
+        super().__init__(x, y, name, value, isInteractable, spriteImage) #call prop's constructor 
+
+        self.game = game
+
+        self.spriteSheetName = spriteSheetName #spriteSheetName is the image directory of the sprite sheet image
+
+        self.animDelay = animDelay #To be implemented: an animation delay so that the animation is'nt being played at 30 fps (at game speed)
+
+        self.animation = spriteSheet(spriteSheetName, rows, cols) #make an instance of class spriteSheet (See above)
+
+        self.animationList = self.animation.getSpriteList(); #get a list of tuples representing the upper left corners of individual frames in the sprite sheet
+
+        self.animationCount = 1 #initialize the index of animation to 0
+
+        self.bgImage = pygame.image.load(bg).convert_alpha() #load the background image
+
+        
+        self.add(game.all_sprites)
+
+    def animate(self):
+        print("animated")
+        if self.animationCount < len(self.animationList):
+            spriteTuple = self.animationList[self.animationCount]
+            self.replaceBackground()
+
+            self.animation.draw(self.image, spriteTuple[0], spriteTuple[1])
+           
+            if self.animationCount == len(self.animationList) - 1:
+                self.animationCount = 0
+            else:
+                self.animationCount += 1
+
+    def replaceBackground(self):
+        print("Background replaced")
+        self.image.blit(self.bgImage, (0, 0), (64, 64, 64, 64))
+
+        
+        
+        
         
 
 class Button(pygame.sprite.Sprite): #define button class for the inventory GUI
@@ -1007,7 +1063,16 @@ class Battle(pygame.sprite.Sprite):
 
         self.rect.y = y
 
+        self.clock1 = Animatable(0, 64, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
 
+        #self.image.blit(self.clock.image, (self.clock.x, self.clock.y))
+
+        self.clock1.add(self.game.clock_group)
+
+    def clock_tick(self):
+        self.clock1.animate()
+
+        
         
                          
         
