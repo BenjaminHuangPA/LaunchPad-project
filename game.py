@@ -298,18 +298,34 @@ class Game(object):
 
     def battleEvents(self):
         CLOCK_TICK = pygame.USEREVENT
+        #pygame.time.set_timer(CLOCK_TICK, 1000)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    
+                if event.key == pygame.K_t:
                     pygame.time.set_timer(CLOCK_TICK, 1000)
+                else:
+                    self.battleEvent.game_clock.tick()
+                    time_elapsed = self.battleEvent.game_clock.get_time()
+                    if event.key == pygame.K_UP:
+                        key_up = ("UP", time_elapsed)
+                        self.battleEvent.keyInputHandler(key_up)
+                    elif event.key == pygame.K_DOWN:
+                        key_down = ("DOWN", time_elapsed)
+                        self.battleEvent.keyInputHandler(key_down)
+                    elif event.key == pygame.K_LEFT:
+                        key_left = ("LEFT", time_elapsed)
+                        self.battleEvent.keyInputHandler(key_left)
+                    elif event.key == pygame.K_RIGHT:
+                        key_right = ("RIGHT", time_elapsed)
+                        self.battleEvent.keyInputHandler(key_right)
+                        
+                
             if event.type == CLOCK_TICK:
                     print("Clock ticked!")
                     
-                    self.battleEvent.clock_tick()
-                    #self.clock1.animate()
+                    self.battleEvent.turn_determiner()
             
                 
             
@@ -432,6 +448,7 @@ class Game(object):
                 self.battle = True
                 self.battleEvent = Battle(self, self.player, enemy, 0, 0)
                 self.battleEvent.add(self.active_battle)
+                
 
     def toggleInventoryVisibility(self):
         if self.display_inventory == True:

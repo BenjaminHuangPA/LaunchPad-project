@@ -1,6 +1,6 @@
 
 import pygame
-
+from collections import deque
 
 
 class Player(pygame.sprite.Sprite):
@@ -1053,6 +1053,8 @@ class Battle(pygame.sprite.Sprite):
 
         self.image = pygame.image.load("img/misc/battle_screen.png").convert_alpha()
 
+        self.bg = pygame.image.load("img/misc/battle_screen.png").convert_alpha()
+
         self.x = x
 
         self.y = x
@@ -1063,20 +1065,290 @@ class Battle(pygame.sprite.Sprite):
 
         self.rect.y = y
 
-        self.clock1 = Animatable(0, 64, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
+        self.player_clock = Animatable(355, 0, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
 
         #self.image.blit(self.clock.image, (self.clock.x, self.clock.y))
 
-        self.clock1.add(self.game.clock_group)
+        self.player_clock.add(self.game.clock_group)
 
-    def clock_tick(self):
-        self.clock1.animate()
+        self.enemy_clock = Animatable(0, 0, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
+
+        self.enemy_clock.add(self.game.clock_group)
+
+        self.player_turn_length = 0
+
+        self.enemy_turn_length = 0
+
+        self.turn_count = 1
+
+        self.turn_indicator("Horace")
+
+        self.keypresses = deque()
+
+        self.combos = []
+
+
+        self.game_clock = pygame.time.Clock()
+
+        self.moveset_tree = TreeManager()
+
+        self.displayCurrentMoves()
+
+        self.KEYRIGHT = pygame.image.load("img/battle/right_arrow_key.png").convert_alpha()
+
+        self.KEYLEFT = pygame.image.load("img/battle/left_arrow_key.png").convert_alpha()
+
+        self.KEYUP = pygame.image.load("img/battle/up_arrow_key.png").convert_alpha()
+
+        self.KEYDOWN = pygame.image.load("img/battle/down_arrow_key.png").convert_alpha()
+
+        self.displayCurrentKeyCombos()        
 
         
+
+    def player_clock_tick(self):
+        self.player_clock.animate()
+
+    def enemy_clock_tick(self):
+        self.enemy_clock.animate()
+
+    def turn_determiner(self):
+        if self.turn_count % 2 != 0:
+            self.player_clock_tick()
+            self.player_turn_length += 1
+            if self.player_turn_length == 12:
+                self.turn_count += 1
+                self.player_turn_length = 0
+                self.turn_indicator("Goblin")
+        elif self.turn_count % 2 == 0:
+            self.enemy_clock_tick()
+            self.enemy_turn_length += 1
+            if self.enemy_turn_length == 12:
+                self.turn_count += 1
+                self.enemy_turn_length = 0
+                self.turn_indicator("Horace")
+
+    def turn_indicator(self, combatant):
         
+        turnMessage = combatant + "'s turn"
+        textwrapper = textWrapper()
+
+        self.image.blit(self.bg, (106, 34), (106, 34, 211, 58))
+
+        textwrapper.blitText(self.image, 106, 34, turnMessage, 211, 30, 10, (255, 255, 255))
+
+    def keyInputHandler(self, keyPress):
+        key = keyPress[0]
+        delay = keyPress[1]
+        checkedKey = self.moveset_tree.checkInput(key)
+        if checkedKey == False:
+            print("Wrong key pressed")
+            pass
+        else:
+            options = [self.moveset_tree.currentTree.c1, self.moveset_tree.currentTree.c2, self.moveset_tree.currentTree.c3, self.moveset_tree.currentTree.c4, self.moveset_tree.currentTree.c5, self.moveset_tree.currentTree.c6]
+            kc_list = self.moveset_tree.returnChoices()
+            for kc in kc_list:
+                if isinstance(kc, list):
+                    self.moveset_tree.currentTree = options[checkedKey]
+                    self.eraseCurrentTree()
+                    self.displayCurrentMoves()
+                    self.displayCurrentKeyCombos()
+                elif isinstance(kc, str):
+                    print("String encountered")
+                    #handle string
+                else:
+                    print("Do nothing")
+            
+            
+
+    def displayCurrentMoves(self):
+        movesList = self.moveset_tree.getCurrentTreeDesc()
+        textwrapper = textWrapper()
+        x = 432
+        y = 9
+        for message in movesList:
+            textwrapper.blitText(self.image, x, y, message, 125, 15, 15, (255, 255, 255))
+            y = y + 25
+
+    def displayCurrentKeyCombos(self):
+        keyCombosList = self.moveset_tree.returnChoices()
+        x = 567
+        y = 9
+        tempX = 0
+        print(keyCombosList)
+        for combo in keyCombosList:
+            if isinstance(combo, str):
+                if combo == "LEFT":
+                    self.image.blit(self.KEYLEFT, (x, y))
+                elif combo == "RIGHT":
+                    self.image.blit(self.KEYRIGHT, (x, y))
+                elif combo == "UP":
+                    self.image.blit(self.KEYUP, (x, y))
+                elif len(combo) > 5:
+                    self.handleKeyRepeats(combo, x, y) #handle key combinations like "LEFT LEFT" or "UP DOWN"
+                else:
+                    self.image.blit(self.KEYDOWN, (x, y))
+
+            elif isinstance(combo, list):
+                print("List detected")
+                tempX = x
+                
+                for key in combo:
+                    
+                    if key == "LEFT":
+                        self.image.blit(self.KEYLEFT, (x, y))
+                    elif key == "RIGHT":
+                        self.image.blit(self.KEYRIGHT, (x, y))
+                    elif key == "UP":
+                        self.image.blit(self.KEYUP, (x, y))
+                    else:
+                        self.image.blit(self.KEYDOWN, (x, y))
+                    x = x + 15
+                x = tempX
+
+            else:
+                pass
+            y = y + 25
+
+    def eraseCurrentTree(self):
+        self.image.blit(self.bg, (432, 6), (432, 6, 206, 151))
+                
+    def handleKeyRepeats(self, inputKeys, x, y):
+        tempX = x
+        keysSplit = inputKeys.split()
+        for key in keysSplit:
+            print(key)
+            if key == "LEFT":
+                self.image.blit(self.KEYLEFT, (tempX, y))
+            elif key == "RIGHT":
+                self.image.blit(self.KEYRIGHT, (tempX, y))
+            elif key == "UP":
+                self.image.blit(self.KEYUP, (tempX, y))
+            else:
+                self.image.blit(self.KEYDOWN, (tempX, y))
+            tempX = tempX + 20
+                
+            
+                    
                          
-        
+class Tree(object):
 
+    def __init__(self, c1, c2, c3, c4, c5, c6, kc, desc):
+        self.c1 = c1
+        self.c2 = c2
+        self.c3 = c3
+        self.c4 = c4
+        self.c5 = c5
+        self.c6 = c6
+        self.kc = kc
+        self.desc = desc
+
+class TreeManager(object):
+
+    def __init__(self):
+        t1desc = ["Parry/foil left arm", "Parry/foil right arm"]
+        t2desc = ["Parry/foil left leg", "Parry/foil right leg"]
+        t3desc = ["Parry/foil against head", "Parry/foil against torso", "Parry/foil against arms", "Parry/foil against legs"]
+        t4desc = ["High shield block", "Low shield block"]
+        t5desc = ["Shield block", "Parry", "Foil"]
+        t6desc = ["Attack combo 1", "Attack combo 2", "Attack combo 3", "Attack combo 4", "Attack combo 5", "Attack combo 6"]
+        t7desc = ["Attack left leg", "Attack right leg"]
+        t8desc = ["Attack left arm", "Attack right arm"]
+        t9desc = ["Target: head", "Target: torso", "Target: arms", "Target: legs"]
+        t10desc = ["Light attack", "Heavy attack", "Charged attack"]
+        t11desc = ["Quick use slot 1", "Quick use slot 2", "Quick use slot 3", "Quick use slot 4"]
+        t12desc = ["Access backpack", "Quick use item"]
+        t13desc = ["Left handed attack", "Right handed attack"]
+        t14desc = ["Left handed block", "Right handed block"]
+        t15desc = ["Special key combo one", "Special key combo 2", "Special key combo 3", "Special key combo 4", "Special key combo 5", "Special key combo 6"]
+        t16desc = ["Off hand special move", "Main hand special move"]
+        t17desc = ["Use item", "Attack", "Block", "Dodge", "Special"]
+        self.t1 = Tree("LEFT", "RIGHT", None, None, None, None, ["RIGHT"], t1desc)
+        self.t2 = Tree("LEFT", "RIGHT", None, None, None, None, ["DOWN"], t2desc)
+        self.t3 = Tree("UP", "LEFT", self.t2, self.t1, None, None, ["RIGHT", "RIGHT RIGHT"], t3desc)
+        self.t4 = Tree("UP", "DOWN", None, None, None, None, ["LEFT"], t4desc)
+        self.t5 = Tree(self.t4, self.t3, self.t3, None, None, None, ["RIGHT", "LEFT"], t5desc)
+        self.t6 = Tree(None, None, None, None, None, None, ["LEFT", "RIGHT"], t6desc)
+        self.t7 = Tree(self.t6, self.t6, None, None, None, None, ["DOWN"], t7desc)
+        self.t8 = Tree(self.t6, self.t6, None, None, None, None, ["RIGHT"], t8desc)
+        self.t9 = Tree("UP", "LEFT", self.t8, self.t7, None, None, ["RIGHT", "LEFT", "UP"], t9desc)
+        self.t10 = Tree(self.t9, self.t9, self.t9, None, None, None, ["LEFT", "RIGHT"], t10desc)
+        self.t11 = Tree("LEFT", "RIGHT", "UP", "DOWN", None, None, ["RIGHT"], t11desc)
+        self.t12 = Tree("LEFT", self.t11, None, None, None, None, ["DOWN"], t12desc)
+        self.t13 = Tree(self.t10, self.t10, None, None, None, None, ["RIGHT"], t13desc)
+        self.t14 = Tree(self.t7, self.t7, None, None, None, None, ["LEFT"], t14desc)
+        self.t15 = Tree(None, None, None, None, None, None, ["RIGHT", "LEFT"], t15desc)
+        self.t16 = Tree(self.t15, self.t15, None, None, None, None, ["UP"], t16desc)
+        self.t17 = Tree(self.t12, self.t13, self.t14, "LEFT LEFT", self.t16, None, ["UP"], t17desc)
+        self.currentTree = self.t17
+
+    def returnChoices(self):
+        choices = []
+        if self.currentTree != None:
+            if isinstance(self.currentTree.c1, str) or self.currentTree.c1 == None:
+                choices.append(self.currentTree.c1)
+            else:
+                choices.append(self.currentTree.c1.kc)
+            if isinstance(self.currentTree.c2, str) or self.currentTree.c2 == None:
+                choices.append(self.currentTree.c2)
+            else:
+                choices.append(self.currentTree.c2.kc)
+            if isinstance(self.currentTree.c3, str) or self.currentTree.c3 == None:
+                choices.append(self.currentTree.c3)
+            else:
+                choices.append(self.currentTree.c3.kc)
+            if isinstance(self.currentTree.c4, str) or self.currentTree.c4 == None:
+                choices.append(self.currentTree.c4)
+            else:
+                choices.append(self.currentTree.c4.kc)
+            if isinstance(self.currentTree.c5, str) or self.currentTree.c5 == None:
+                choices.append(self.currentTree.c5)
+            else:
+                choices.append(self.currentTree.c5.kc)
+            if isinstance(self.currentTree.c6, str) or self.currentTree.c6 == None:
+                choices.append(self.currentTree.c6)
+            else:
+                choices.append(self.currentTree.c6.kc)
+            return choices
+        else:
+            print("Invalid")
+            return choices
+
+    def checkInput(self, keyInput):
+        choices = self.returnChoices()
+        isValid = False
+        for choice in choices:
+            if isinstance(choice, str):
+                if keyInput == choice:
+                    isValid = choices.index(choice)
+                else:
+                    continue
+            elif isinstance(choice, list):
+                if keyInput in choice:
+                    isValid = choices.index(choice)
+            else:
+                continue
+        print(isValid)
+
+        return isValid
+
+    def handleInput(self, keyInput):
+        index = self.checkInput(keyInput)
+        
+        if isinstance(index, int):
+            branchesList = [self.currentTree.c1, self.currentTree.c2, self.currentTree.c3, self.currentTree.c4, self.currentTree.c5, self.currentTree.c6]
+            if isinstance(branchesList[index], Tree):
+                self.currentTree = branchesList[index]
+                print(self.currentTree.c1)
+        else:
+            print("Invalid input entered!")
+
+    def resetCurrentTree(self):
+        self.currentTree = self.t17
+
+    def getCurrentTreeDesc(self):
+        return self.currentTree.desc
+    
 
 class textWrapper(object):
 
