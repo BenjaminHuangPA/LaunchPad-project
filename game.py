@@ -28,28 +28,19 @@ class Game(object):
         self.active_message_boxes = pygame.sprite.Group() #sprite group to hold active message boxes
         self.active_option_boxes = pygame.sprite.Group()
         self.active_enemies = pygame.sprite.Group()
+        self.title_screen = pygame.sprite.Group()
 
         self.active_ground_items = pygame.sprite.Group()
 
         self.message_box_active = False #check if there are active message boxes
 
         self.active_battle = pygame.sprite.Group()
+        self.active_enemy_status_bar = pygame.sprite.Group()
 
         #for prop in objects.cave_plants:
         #    self.props.add(prop)
 
-        self.leftwall = pygame.image.load("img/tile/chasm/chasm_wall_left.png").convert()
-        self.rightwall = pygame.image.load("img/tile/chasm/chasm_wall_right.png").convert()
-        self.topwall = pygame.image.load("img/tile/chasm/chasm_wall_top.png").convert()
-        self.bottomwall = pygame.image.load("img/tile/chasm/chasm_wall_bottom.png").convert()
-
-        self.window.blit(self.rightwall, (576, 0))
-
-        self.window.blit(self.topwall, (0, 0))
-
-        self.window.blit(self.bottomwall, (0, 576))
-
-        self.window.blit(self.leftwall, (0, 0))
+        
 
         self.clock = pygame.time.Clock()
 
@@ -92,9 +83,9 @@ class Game(object):
         
         self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
 
-        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, "Beast", "goblin")
+        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, 20, None, None, None, None, "Beast", "goblin")
 
-        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, "Beast", "goblin")
+        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, 20, None, None, None, None, "Beast", "goblin")
 
 
         room_1_enemies = [self.goblin, self.goblin_2]
@@ -117,11 +108,10 @@ class Game(object):
 
         self.battle = False
 
-        
+        self.titlescreen = TitleScreen(self, 0, 0)
 
         self.clock_group = pygame.sprite.Group()
 
-        
 
         #create a 2D array of rooms to represent this zone.
 
@@ -145,10 +135,23 @@ class Game(object):
 
         self.clock = pygame.time.Clock()
 
+        self.prevKey = None
+
     def new(self):
 
         
+        self.leftwall = pygame.image.load("img/tile/chasm/chasm_wall_left.png").convert()
+        self.rightwall = pygame.image.load("img/tile/chasm/chasm_wall_right.png").convert()
+        self.topwall = pygame.image.load("img/tile/chasm/chasm_wall_top.png").convert()
+        self.bottomwall = pygame.image.load("img/tile/chasm/chasm_wall_bottom.png").convert()
 
+        self.window.blit(self.rightwall, (576, 0))
+
+        self.window.blit(self.topwall, (0, 0))
+
+        self.window.blit(self.bottomwall, (0, 576))
+
+        self.window.blit(self.leftwall, (0, 0))
         
 
         self.statusbar = statusBar(self, self.player, 0, 640)
@@ -169,6 +172,23 @@ class Game(object):
 
         self.inventory = inventoryGUI(self, self.player, 64, 128) #initialize new inventoryGUI object (see assets.py)
 
+
+    def titleScreen(self):
+        self.title = True
+        
+        while self.title == True:
+            self.titleScreenEvents()
+            self.titleScreenDraw()
+            self.titleScreenUpdate()
+
+
+    def titleScreenDraw(self):
+        self.title_screen.draw(self.window)
+
+    def titleScreenUpdate(self):
+        self.title_screen.update()
+    
+
     def run(self): #method to run the game
         self.playing = True #initialize "self.playing" to true
         while self.playing == True:
@@ -187,11 +207,41 @@ class Game(object):
             
             self.update()
             self.clock.tick(25)
+
+    def titleScreenEvents(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.title = False
             
+            if event.type == pygame.MOUSEMOTION:
+                mousePos = pygame.mouse.get_pos()
+
+                self.titlescreen.buttonMouseOver(mousePos)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                mousePos = pygame.mouse.get_pos()
+
+                if self.titlescreen.clickButton(mousePos) == 4:
+                    self.quit()
+                elif self.titlescreen.clickButton(mousePos) == 1:
+                    self.title = False
+
+            
+            
+        pygame.display.flip()
+                
+                
+                
+                
             
             
     def events(self):
         for event in pygame.event.get(): #loop through events of pygame
+            
             if event.type == pygame.QUIT: 
                 self.quit() #if the event is "quit" run the method self.quit()
             if event.type == pygame.KEYDOWN:
@@ -202,19 +252,21 @@ class Game(object):
                     self.quit()
                 if event.key == pygame.K_LEFT and self.player.x > 64 and self.checkPropCollisions("left") == False:
                     self.player.move(-10, 0)
+                    self.prevKey = "l"
                
                     
                 if event.key == pygame.K_RIGHT and self.player.x < 512 and self.checkPropCollisions("right") == False:
                     self.player.move(10, 0)
-                
+                    self.prevKey = "r"
 
                         
                 if event.key == pygame.K_UP and self.player.y > 64 and self.checkPropCollisions("up") == False:
                     self.player.move(0, -10)
-               
+                    self.prevKey = "u"
                     
                 if event.key == pygame.K_DOWN and self.player.y < 512 and self.checkPropCollisions("down") == False:
                     self.player.move(0, 10)
+                    self.prevKey = "d"
                 
                 if event.key == pygame.K_e:
                     
@@ -232,6 +284,11 @@ class Game(object):
                 if event.key == pygame.K_h:
                     self.player.heal(1)
                     self.statusbar.increaseHealth(1)
+
+            if event.type == pygame.KEYUP:
+                if self.prevKey == "l" or self.prevKey == "r" or self.prevKey == "u" or self.prevKey == "d":
+                    self.player.idle()        
+                
                     
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos() #get position of mouse on the screen
@@ -392,6 +449,8 @@ class Game(object):
 
        self.active_battle.draw(self.window)
 
+       self.active_enemy_status_bar.draw(self.window)
+
        self.clock_group.draw(self.window)
 
        pygame.display.flip() #update the surfaces
@@ -446,7 +505,7 @@ class Game(object):
         for enemy in self.active_enemies.sprites():
             if pygame.sprite.collide_rect(self.player, enemy) == True:
                 self.battle = True
-                self.battleEvent = Battle(self, self.player, enemy, 0, 0)
+                self.battleEvent = Battle(self, self.player, enemy, 0, 150)
                 self.battleEvent.add(self.active_battle)
                 
 
@@ -565,6 +624,7 @@ class Game(object):
 g = Game() #initialize new game object
 while True:
     g.clock.tick(16)
+    g.titleScreen()
     g.new()
     g.run() #call run method
     

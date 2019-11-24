@@ -1,7 +1,108 @@
 
 import pygame
 from collections import deque
+from random import randint
 
+class TitleScreen(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.title_screen
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+
+        self.x = x
+
+        self.y = y
+
+        self.image = pygame.image.load("img/misc/title_screen.png").convert_alpha()
+
+        self.bg = pygame.image.load("img/misc/title_screen_bg.png").convert_alpha()
+
+        self.new_game_button = pygame.image.load("img/misc/new_game_button.png").convert_alpha()
+
+        self.new_game_button_selected = pygame.image.load("img/misc/new_game_button_selected.png").convert_alpha()
+
+        self.load_game_button = pygame.image.load("img/misc/load_game.png").convert_alpha()
+
+        self.load_game_button_selected = pygame.image.load("img/misc/load_game_selected.png").convert_alpha()        
+
+        self.how_to_play_button = pygame.image.load("img/misc/how_to_play.png").convert_alpha()
+
+        self.how_to_play_button_selected = pygame.image.load("img/misc/how_to_play_selected.png").convert_alpha()
+
+        self.quit_button = pygame.image.load("img/misc/quit.png").convert_alpha()
+
+        self.quit_button_selected = pygame.image.load("img/misc/quit_selected.png").convert_alpha()
+
+        self.new_game_pos = pygame.Rect(297, 228, 177, 37)
+        self.load_game_pos = pygame.Rect(297, 269, 177, 37)
+        self.how_to_play_pos = pygame.Rect(297, 315, 177, 37)
+        self.quit_game_pos = pygame.Rect(297, 355, 177, 37)
+
+        self.current_selection = None
+
+        self.current_rect = None
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = x
+
+        self.rect.y = y
+
+        
+
+    def buttonMouseOver(self, pos):
+        
+        if self.new_game_pos.collidepoint(pos):
+            self.selectButton(self.new_game_button_selected, self.new_game_pos)
+            self.current_selection = self.new_game_button
+            self.current_rect = self.new_game_pos
+            
+        elif self.load_game_pos.collidepoint(pos):
+            self.selectButton(self.load_game_button_selected, self.load_game_pos)
+            self.current_selection = self.load_game_button
+            self.current_rect = self.load_game_pos
+
+            
+        elif self.how_to_play_pos.collidepoint(pos):
+            self.selectButton(self.how_to_play_button_selected, self.how_to_play_pos)
+            self.current_selection = self.how_to_play_button
+            self.current_rect = self.how_to_play_pos
+
+            
+        elif self.quit_game_pos.collidepoint(pos):
+            self.selectButton(self.quit_button_selected, self.quit_game_pos)
+            self.current_selection = self.quit_button
+            self.current_rect = self.quit_game_pos
+        else:
+            self.deselectButton(self.current_selection, self.current_rect)
+        
+
+    def selectButton(self, selectedButton, pos_rect):
+        self.image.blit(self.bg, (pos_rect.left, pos_rect.top), (pos_rect.left, pos_rect.top, 177, 37))
+        self.image.blit(selectedButton, (pos_rect.left, pos_rect.top), (0, 0, 177, 37))
+
+    def deselectButton(self, button, pos_rect):
+        if self.current_selection != None:
+            self.image.blit(self.bg, (pos_rect.left, pos_rect.top), (pos_rect.left, pos_rect.top, 177, 37))
+            self.image.blit(button, (pos_rect.left, pos_rect.top), (0, 0, 177, 37))
+
+    def clickButton(self, pos):
+        if self.new_game_pos.collidepoint(pos):
+            
+            return 1
+        elif self.load_game_pos.collidepoint(pos):
+            
+            return 2
+            
+        elif self.how_to_play_pos.collidepoint(pos):
+            
+            return 3
+            
+        elif self.quit_game_pos.collidepoint(pos):
+            return 4
+            
+            
+        
 
 class Player(pygame.sprite.Sprite):
     
@@ -25,7 +126,7 @@ class Player(pygame.sprite.Sprite):
 
         self.forward = False
 
-        self.forward = True
+        self.backward = False
 
         self.left = False
 
@@ -93,13 +194,48 @@ class Player(pygame.sprite.Sprite):
 
         
 
+        self.learnedMoves = {"Swing": self.randKeys(3), "Thrust": self.randKeys(5), "Lunge": self.randKeys(6)} 
+
+    def randKeys(self, keys):
+        combo = ""
+        for i in range(0, keys):
+            random_integer = randint(1, 4)
+            if random_integer == 1:
+                combo = combo + "LEFT"
+            elif random_integer == 2:
+                combo = combo + "RIGHT"
+            elif random_integer == 3:
+                combo = combo + "UP"
+            elif random_integer == 4:
+                combo = combo + "DOWN"
+	    
+            if i < keys - 1:
+                combo = combo + " "
+        return(combo)
+
     def move(self, x, y):
         
         #if(self.checkWallCollision() == True):
         self.walkAnim(x, y) #play the walking animation (See below)
         self.x += x #move player left/right
         self.y += y #move player right/left
+        
 
+    def randKeys(self, keys):
+        combo = ""
+        for i in range(0, keys):
+            random_integer = randint(1, 4)
+            if random_integer == 1:
+                combo = combo + "LEFT"
+            elif random_integer == 2:
+                combo = combo + "RIGHT"
+            elif random_integer == 3:
+                combo = combo + "UP"
+            elif random_integer == 4:
+                combo = combo + "DOWN"
+            if i < keys:
+                combo = combo + " "
+        return(combo)
 
 
     def takeDamage(self, DMG):
@@ -211,6 +347,9 @@ class Player(pygame.sprite.Sprite):
         
     def walkAnim(self, x, y):
         if x < 0: #if the player walks to the left (change in x pos less than 0)
+            self.left = True
+            
+            
             if self.walkLeftCount < len(self.playerWalkLeftList): #loop through the list of sprites of the player walking
                 leftSpriteTuple = self.playerWalkLeftList[self.walkLeftCount] #
                 self.replaceBackground("left") #call blitOut2 method to blit new blank background onto the image
@@ -222,6 +361,10 @@ class Player(pygame.sprite.Sprite):
                     self.walkLeftCount += 1 #else, go to the next sprite
         
         if x > 0: #handle walking right
+            
+            self.right = True
+            
+            
             if self.walkRightCount < len(self.playerWalkRightList):
                 rightSpriteTuple = self.playerWalkRightList[self.walkRightCount]
                 self.replaceBackground("right")
@@ -232,7 +375,10 @@ class Player(pygame.sprite.Sprite):
                 else:
                     
                     self.walkRightCount += 1
-        if y > 0:
+        if y > 0: #walking "backward"
+
+            self.backward = True
+            
             if self.walkBackwardCount < len(self.playerWalkBackwardList):
                 downSpriteTuple = self.playerWalkBackwardList[self.walkBackwardCount]
                 self.replaceBackground("down")
@@ -242,7 +388,10 @@ class Player(pygame.sprite.Sprite):
                     self.walkBackwardCount = 0
                 else:
                     self.walkBackwardCount += 1
-        if y < 0:
+        if y < 0: #walking "forward"
+
+            self.forward = True
+            
             if self.walkForwardCount < len(self.playerWalkForwardList):
                 upSpriteTuple = self.playerWalkForwardList[self.walkForwardCount]
                 self.replaceBackground("up")
@@ -254,6 +403,28 @@ class Player(pygame.sprite.Sprite):
                     self.walkForwardCount += 1
         #pygame.display.update()
 
+    def idle(self):
+        
+        if self.forward == True:
+            self.replaceBackground("up")
+            self.playerWalkForward.draw(self.image, 0, 0)
+            self.renderEquipment("up", 0, 0)
+            self.forward = False
+        elif self.backward == True:
+            self.replaceBackground("down")
+            self.playerWalkBackward.draw(self.image, 0, 0)
+            self.renderEquipment("down", 0, 0)
+            self.backward = False
+        elif self.left == True:
+            self.replaceBackground("left")
+            self.playerWalkLeft.draw(self.image, 0, 0)
+            self.renderEquipment("left", 0, 0)
+            self.left = False
+        else:
+            self.replaceBackground("right")
+            self.playerWalkRight.draw(self.image, 0, 0)
+            self.renderEquipment("right", 0, 0)
+            self.right = False
         
     def update(self):
         self.rect.x = self.x * 1
@@ -361,7 +532,7 @@ class Player(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite): #create enemy class
 
-    def __init__(self, game, player, x, y, speed, name, HP, classification, fileName):
+    def __init__(self, game, player, x, y, speed, name, HP, maxHP, headArmor, torsoArmor, armArmor, legArmor, classification, fileName):
         self.groups = game.all_sprites
 
         path = "img/enemy/"+fileName+"/"+fileName
@@ -379,6 +550,16 @@ class Enemy(pygame.sprite.Sprite): #create enemy class
         self.name = name
 
         self.HP = HP
+
+        self.maxHP = maxHP
+
+        self.headArmor = headArmor
+
+        self.torsoArmor = torsoArmor
+
+        self.armArmor = armArmor
+
+        self.legArmor = legArmor
 
         self.classification = classification
 
@@ -1005,6 +1186,12 @@ class enemyStatusBar(pygame.sprite.Sprite):
 
         self.image = pygame.image.load("img/menu/enemy_status_bar.png").convert_alpha()
 
+       
+
+        self.portrait = pygame.image.load("img/enemy/goblin/portrait.png").convert_alpha()
+
+        self.image.blit(self.portrait, (16, 19))
+
         self.rect = self.image.get_rect()
 
         self.rect.x = x
@@ -1013,10 +1200,33 @@ class enemyStatusBar(pygame.sprite.Sprite):
 
         self.initializeHealthBar()
 
+        self.initializeText()
+
     def initializeHealthBar(self):
-        healthBarLength = self.enemy.HP / 3
+        healthBarLength = self.enemy.HP * 3
         healthBarRect = pygame.Rect(176, 62, healthBarLength, 11)
         pygame.draw.rect(self.image, (141, 42, 42), healthBarRect)
+
+    def increaseHealth(self, health):
+        print(self.enemy.HP)
+        if(self.enemy.HP < self.enemy.maxHP):
+            newHealth = pygame.Rect(176, 62, 3 * self.enemy.HP, 11)
+            pygame.draw.rect(self.image, (141, 42, 42), newHealth)
+        else:
+            fullHP = pygame.Rect(176, 62, 3 * self.enemy.maxHP, 11)
+            pygame.draw.rect(self.image, (141, 42, 42), fullHP)
+            
+
+    def decreaseHealth(self, health):
+        print(self.enemy.HP)
+        if(self.enemy.HP > 0):
+            remainingHP = (self.enemy.HP) * 3
+            maxHP = (self.player.maxHP - self.enemy.HP) * 3
+            healthLost = pygame.Rect(176 + remainingHP, 62, maxHP, 11)
+            pygame.draw.rect(self.image, (82, 51, 46), healthLost)
+        else:
+            noHP = pygame.Rect(176, 62, self.enemy.maxHP * 3, 11)
+            pygame.draw.rect(self.image, (82, 51, 46), noHP)
 
     def initializeText(self):
         pygame.font.init()
@@ -1024,17 +1234,17 @@ class enemyStatusBar(pygame.sprite.Sprite):
 
         classification = self.enemy.classification
 
-        nameFont = pygame.font.SysFont("Times New Roman", 30)
+        nameFont = pygame.font.SysFont("Times New Roman", 25)
 
         nameText = nameFont.render(name, False, (255, 255, 255))
 
-        self.image.blit(nameText, (110, 13))
+        self.image.blit(nameText, (110, 7))
 
-        classFont = pygame.font.SysFont("Times New Roman", 20)
+        classFont = pygame.font.SysFont("Times New Roman", 16)
 
         classText = classFont.render(classification, False, (255, 255, 255))
 
-        self.image.blit(classText, (110, 36))
+        self.image.blit(classText, (110, 33))
 
 
 class Battle(pygame.sprite.Sprite):
@@ -1065,15 +1275,19 @@ class Battle(pygame.sprite.Sprite):
 
         self.rect.y = y
 
-        self.player_clock = Animatable(355, 0, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
+        self.player_clock = Animatable(355, 150, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
 
         #self.image.blit(self.clock.image, (self.clock.x, self.clock.y))
 
         self.player_clock.add(self.game.clock_group)
 
-        self.enemy_clock = Animatable(0, 0, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
+        self.enemy_clock = Animatable(0, 150, self.game, "Clock", 998, False, "img/battle/game_clock.png", "img/battle/game_clock_spritesheet.png", 12, 1, 0, "img/misc/battle_screen.png")
 
         self.enemy_clock.add(self.game.clock_group)
+
+        self.enemy_status_bar = enemyStatusBar(self.game, self.enemy, 0, 0)
+
+        self.enemy_status_bar.add(self.game.active_enemy_status_bar)
 
         self.player_turn_length = 0
 
@@ -1087,10 +1301,14 @@ class Battle(pygame.sprite.Sprite):
 
         self.combos = []
 
+        self.left_hand_action = []
+
+        self.right_hand_action = []
+        
 
         self.game_clock = pygame.time.Clock()
 
-        self.moveset_tree = TreeManager()
+        self.moveset_tree = TreeManager(self.player)
 
         self.displayCurrentMoves()
 
@@ -1140,25 +1358,64 @@ class Battle(pygame.sprite.Sprite):
     def keyInputHandler(self, keyPress):
         key = keyPress[0]
         delay = keyPress[1]
-        checkedKey = self.moveset_tree.checkInput(key)
-        if checkedKey == False:
+        checkedKey = self.moveset_tree.checkInput(key) 
+        print(checkedKey)
+        if checkedKey == "False":
             print("Wrong key pressed")
             pass
         else:
             options = [self.moveset_tree.currentTree.c1, self.moveset_tree.currentTree.c2, self.moveset_tree.currentTree.c3, self.moveset_tree.currentTree.c4, self.moveset_tree.currentTree.c5, self.moveset_tree.currentTree.c6]
+            #print(options)
             kc_list = self.moveset_tree.returnChoices()
-            for kc in kc_list:
-                if isinstance(kc, list):
-                    self.moveset_tree.currentTree = options[checkedKey]
-                    self.eraseCurrentTree()
-                    self.displayCurrentMoves()
-                    self.displayCurrentKeyCombos()
-                elif isinstance(kc, str):
-                    print("String encountered")
-                    #handle string
-                else:
-                    print("Do nothing")
+            #print(kc_list)
+            selection = kc_list[checkedKey]
             
+            if isinstance(selection, list):
+
+                movesList = self.moveset_tree.getCurrentTreeDesc()
+                print(movesList)
+                move = movesList[checkedKey]
+                self.handleFinalKeyInput(move)
+                
+                self.moveset_tree.currentTree = options[checkedKey]
+                self.eraseCurrentTree()
+                self.displayCurrentMoves()
+                self.displayCurrentKeyCombos()
+            elif isinstance(selection, str):
+                movesList = self.moveset_tree.getCurrentTreeDesc()
+                print(self.moveset_tree.getNumber())
+                if(self.moveset_tree.getNumber() == 6):
+                    keys = list(self.player.learnedMoves.keys())
+                    move = keys[checkedKey]
+                    print("Move:" + move)
+                    self.handleFinalKeyInput(move)
+                else:
+                    move = movesList[checkedKey]
+                    self.handleFinalKeyInput(move)
+            else:
+                print("Do nothing")
+
+    def handleFinalKeyInput(self, move):
+        print("Move: " + move)
+        self.combos.append(move)
+        print("Combos: ")
+        print(self.combos)
+        print(self.moveset_tree.getNumber())
+        if self.moveset_tree.getNumber() == 6:
+            print("Attack ready to be executed!")
+            print(self.combos)
+            hand = self.combos[1]
+            magnitude = self.combos[2]
+            region = self.combos[3]
+            specRegion = self.combos[4]
+            isSpecAttack = False
+            move = self.combos[5]
+            statEffectBonus = False
+            attack = Attack(self.player, self.enemy, hand, magnitude, region, specRegion, isSpecAttack, move, statEffectBonus)
+            print("Attack damage:")
+            print(attack.calculateDamage())
+        
+    
             
 
     def displayCurrentMoves(self):
@@ -1175,25 +1432,24 @@ class Battle(pygame.sprite.Sprite):
         x = 567
         y = 9
         tempX = 0
-        print(keyCombosList)
-        for combo in keyCombosList:
-            if isinstance(combo, str):
-                if combo == "LEFT":
+        combo = 0
+        while combo < len(keyCombosList):
+            if isinstance(keyCombosList[combo], str):
+                if keyCombosList[combo] == "LEFT":
                     self.image.blit(self.KEYLEFT, (x, y))
-                elif combo == "RIGHT":
+                elif keyCombosList[combo] == "RIGHT":
                     self.image.blit(self.KEYRIGHT, (x, y))
-                elif combo == "UP":
+                elif keyCombosList[combo] == "UP":
                     self.image.blit(self.KEYUP, (x, y))
-                elif len(combo) > 5:
-                    self.handleKeyRepeats(combo, x, y) #handle key combinations like "LEFT LEFT" or "UP DOWN"
+                elif len(keyCombosList[combo]) > 5:
+                    self.handleKeyRepeats(keyCombosList[combo], x, y) #handle key combinations like "LEFT LEFT" or "UP DOWN"
                 else:
                     self.image.blit(self.KEYDOWN, (x, y))
-
-            elif isinstance(combo, list):
-                print("List detected")
-                tempX = x
+                y = y + 25
+            elif isinstance(keyCombosList[combo], list):
+                #tempX = x
                 
-                for key in combo:
+                for key in keyCombosList[combo]:
                     
                     if key == "LEFT":
                         self.image.blit(self.KEYLEFT, (x, y))
@@ -1203,12 +1459,17 @@ class Battle(pygame.sprite.Sprite):
                         self.image.blit(self.KEYUP, (x, y))
                     else:
                         self.image.blit(self.KEYDOWN, (x, y))
-                    x = x + 15
-                x = tempX
-
+                    y = y + 25
+                    
+                if len(keyCombosList[combo]) > 1:
+                    combo += 1 #skip next iteration 
+                    
+                #x = tempX
+                
             else:
                 pass
-            y = y + 25
+                y = y + 25
+            combo += 1
 
     def eraseCurrentTree(self):
         self.image.blit(self.bg, (432, 6), (432, 6, 206, 151))
@@ -1228,12 +1489,82 @@ class Battle(pygame.sprite.Sprite):
                 self.image.blit(self.KEYDOWN, (tempX, y))
             tempX = tempX + 20
                 
-            
+class Attack(object):
+
+    def __init__(self, player, enemy, hand, magnitude, region, specificRegion, isSpecAttack, move, statEffectBonus):
+        self.player = player 
+        self.enemy = enemy
+        self.hand = hand
+        self.magnitude = magnitude #light, heavy, charged
+        self.region = region #head, torso, arms or legs
+        self.specificRegion = specificRegion #left arm/leg, right arm/leg
+        self.isSpecAttack = isSpecAttack
+        self.move = move
+        self.statEffectBonus = statEffectBonus
+
+    def calculateDamage(self):
+        damageWithBonus = self.getRawDamage() * self.getMagnitudeBonus()
+        if self.calculateCrit():
+            damageWithBonus *= 2
+        totalDamage = damageWithBonus + self.calculateStrengthBonus()
+        return totalDamage
+        
+    def calculateStrengthBonus(self):
+        bonus = self.player.STR * 2
+        return bonus
+
+    def getRawDamage(self):
+        rawDMG = 0
+        if self.hand == "Left handed attack":
+            if self.player.lWeapon == None:
+                return self.player.STR
+            else:
+                rawDMG = self.player.lWeapon.rawDMG
+        elif self.hand == "Right handed attack":
+            if self.player.rWeapon == None:
+                return self.player.STR
+            else:
+                rawDMG = self.player.rWeapon.rawDMG
+
+        return rawDMG
+
+    def getMagnitudeBonus(self):
+        if self.magnitude == "Light attack":
+            return 1
+        
+        elif self.magnitude == "Heavy attack":
+            return 1.2
+
+        elif self.magnitude == "Charged attack":
+            return 1.5
+
+    def calculateCrit(self):
+        critChance = 0
+        if self.hand == "Left handed attack":
+            if self.player.lWeapon == None:
+                critChance = 5
+            else:
+                critChance = self.player.lWeapon.critChance
+        elif self.hand == "Right handed attack":
+            if self.player.rWeapon == None:
+                critChance = 5
+            else:
+                critChance = self.player.rWeapon.critChance
+
+        value = randint(0, 100)
+        if value < critChance:
+            return True
+        else:
+            return False
+        
+    
+
+    
                     
                          
 class Tree(object):
 
-    def __init__(self, c1, c2, c3, c4, c5, c6, kc, desc):
+    def __init__(self, c1, c2, c3, c4, c5, c6, kc, desc, number):
         self.c1 = c1
         self.c2 = c2
         self.c3 = c3
@@ -1242,16 +1573,20 @@ class Tree(object):
         self.c6 = c6
         self.kc = kc
         self.desc = desc
+        self.number = number
+        
 
 class TreeManager(object):
 
-    def __init__(self):
+    def __init__(self, player):
+        self.player = player
         t1desc = ["Parry/foil left arm", "Parry/foil right arm"]
         t2desc = ["Parry/foil left leg", "Parry/foil right leg"]
         t3desc = ["Parry/foil against head", "Parry/foil against torso", "Parry/foil against arms", "Parry/foil against legs"]
         t4desc = ["High shield block", "Low shield block"]
         t5desc = ["Shield block", "Parry", "Foil"]
-        t6desc = ["Attack combo 1", "Attack combo 2", "Attack combo 3", "Attack combo 4", "Attack combo 5", "Attack combo 6"]
+        #t6desc = ["Attack combo 1", "Attack combo 2", "Attack combo 3", "Attack combo 4", "Attack combo 5", "Attack combo 6"]
+        t6desc = self.player.learnedMoves.keys()
         t7desc = ["Attack left leg", "Attack right leg"]
         t8desc = ["Attack left arm", "Attack right arm"]
         t9desc = ["Target: head", "Target: torso", "Target: arms", "Target: legs"]
@@ -1263,24 +1598,33 @@ class TreeManager(object):
         t15desc = ["Special key combo one", "Special key combo 2", "Special key combo 3", "Special key combo 4", "Special key combo 5", "Special key combo 6"]
         t16desc = ["Off hand special move", "Main hand special move"]
         t17desc = ["Use item", "Attack", "Block", "Dodge", "Special"]
-        self.t1 = Tree("LEFT", "RIGHT", None, None, None, None, ["RIGHT"], t1desc)
-        self.t2 = Tree("LEFT", "RIGHT", None, None, None, None, ["DOWN"], t2desc)
-        self.t3 = Tree("UP", "LEFT", self.t2, self.t1, None, None, ["RIGHT", "RIGHT RIGHT"], t3desc)
-        self.t4 = Tree("UP", "DOWN", None, None, None, None, ["LEFT"], t4desc)
-        self.t5 = Tree(self.t4, self.t3, self.t3, None, None, None, ["RIGHT", "LEFT"], t5desc)
-        self.t6 = Tree(None, None, None, None, None, None, ["LEFT", "RIGHT"], t6desc)
-        self.t7 = Tree(self.t6, self.t6, None, None, None, None, ["DOWN"], t7desc)
-        self.t8 = Tree(self.t6, self.t6, None, None, None, None, ["RIGHT"], t8desc)
-        self.t9 = Tree("UP", "LEFT", self.t8, self.t7, None, None, ["RIGHT", "LEFT", "UP"], t9desc)
-        self.t10 = Tree(self.t9, self.t9, self.t9, None, None, None, ["LEFT", "RIGHT"], t10desc)
-        self.t11 = Tree("LEFT", "RIGHT", "UP", "DOWN", None, None, ["RIGHT"], t11desc)
-        self.t12 = Tree("LEFT", self.t11, None, None, None, None, ["DOWN"], t12desc)
-        self.t13 = Tree(self.t10, self.t10, None, None, None, None, ["RIGHT"], t13desc)
-        self.t14 = Tree(self.t7, self.t7, None, None, None, None, ["LEFT"], t14desc)
-        self.t15 = Tree(None, None, None, None, None, None, ["RIGHT", "LEFT"], t15desc)
-        self.t16 = Tree(self.t15, self.t15, None, None, None, None, ["UP"], t16desc)
-        self.t17 = Tree(self.t12, self.t13, self.t14, "LEFT LEFT", self.t16, None, ["UP"], t17desc)
+        self.t1 = Tree("LEFT", "RIGHT", None, None, None, None, ["RIGHT"], t1desc, 1)
+        self.t2 = Tree("LEFT", "RIGHT", None, None, None, None, ["DOWN"], t2desc, 2)
+        self.t3 = Tree("UP", "LEFT", self.t2, self.t1, None, None, ["RIGHT", "RIGHT RIGHT"], t3desc, 3)
+        self.t4 = Tree("UP", "DOWN", None, None, None, None, ["LEFT"], t4desc, 4)
+        self.t5 = Tree(self.t4, self.t3, self.t3, None, None, None, ["RIGHT", "LEFT"], t5desc, 5)
+        self.t6 = Tree(self.player.learnedMoves["Swing"], self.player.learnedMoves["Thrust"], self.player.learnedMoves["Lunge"], None, None, None, ["LEFT", "RIGHT"], t6desc, 6)
+        self.t7 = Tree(self.t6, self.t6, None, None, None, None, ["DOWN"], t7desc, 7)
+        self.t8 = Tree(self.t6, self.t6, None, None, None, None, ["RIGHT"], t8desc, 8)
+        self.t9 = Tree("UP", "LEFT", self.t8, self.t7, None, None, ["LEFT", "RIGHT", "UP"], t9desc, 9)
+        self.t10 = Tree(self.t9, self.t9, self.t9, None, None, None, ["LEFT", "RIGHT"], t10desc, 10)
+        self.t11 = Tree("LEFT", "RIGHT", "UP", "DOWN", None, None, ["RIGHT"], t11desc, 11)
+        self.t12 = Tree("LEFT", self.t11, None, None, None, None, ["DOWN"], t12desc, 12)
+        self.t13 = Tree(self.t10, self.t10, None, None, None, None, ["RIGHT"], t13desc, 13)
+        self.t14 = Tree(self.t7, self.t7, None, None, None, None, ["LEFT"], t14desc, 14)
+        self.t15 = Tree(None, None, None, None, None, None, ["RIGHT", "LEFT"], t15desc, 15)
+        self.t16 = Tree(self.t15, self.t15, None, None, None, None, ["UP"], t16desc, 16)
+        self.t17 = Tree(self.t12, self.t13, self.t14, "LEFT LEFT", self.t16, None, ["UP"], t17desc, 17)
         self.currentTree = self.t17
+
+        self.keyCombo = []
+
+        self.comboIndex = 0
+
+        self.validAttack = False
+
+    def getNumber(self):
+        return self.currentTree.number
 
     def returnChoices(self):
         choices = []
@@ -1315,22 +1659,84 @@ class TreeManager(object):
             return choices
 
     def checkInput(self, keyInput):
+        
         choices = self.returnChoices()
-        isValid = False
+        
+        
+        isValid = "False"
         for choice in choices:
             if isinstance(choice, str):
-                if keyInput == choice:
-                    isValid = choices.index(choice)
-                else:
-                    continue
-            elif isinstance(choice, list):
-                if keyInput in choice:
-                    isValid = choices.index(choice)
-            else:
-                continue
-        print(isValid)
+                    
+                    if self.getNumber() == 6:
+                        
+                        combos = choice.split(" ")
+                        
+                        print(combos)
+                        if len(self.keyCombo) >= len(combos):
+                            print("Invalid!")
+                            continue
+                        else:
+                            if combos[self.comboIndex] == keyInput:
+                                self.keyCombo.append(combos[self.comboIndex])
+                                print("Current key combos:")
+                                print(self.keyCombo)
+                                self.comboIndex += 1
+                                self.validAttack = True
+
+                                if self.listEqualityChecker(combos, self.keyCombo) == True:
+                                    print("This is a valid attack.")
+                                    isValid = choices.index(choice)
+                                    
+                                    
+                                
+                                break
+                        
+                        
+                    
+                
+                    if keyInput == choice:
+                        isValid = choices.index(choice)
+
+            elif isinstance(choice, list):    
+                if (keyInput in choice):
+                    if len(choice) > 1: 
+                        index = choice.index(keyInput)
+                        return index
+                    else:
+                        isValid = choices.index(choice)
+                        
+                        break
+
+        
+                    
+        if self.validAttack == False:
+            print("Error: Invalid key combo!!!!!")
+            self.keyCombos = []
+            self.comboIndex = 0
 
         return isValid
+
+    def listEqualityChecker(self, list1, list2):
+        print("list 1")
+        print(list1)
+        del[list1[len(list1) - 1]]
+        print("list 2")
+        
+        print(list2)
+        if(len(list1) != len(list2)):
+            return False
+        else:
+            index1 = 0
+            index2 = 0
+            while index1 < len(list1):
+                
+                if(list1[index1] != list2[index2]):
+                    return False
+                else:
+                    index1 += 1
+                    index2 += 1
+        return True
+                
 
     def handleInput(self, keyInput):
         index = self.checkInput(keyInput)
@@ -1339,7 +1745,6 @@ class TreeManager(object):
             branchesList = [self.currentTree.c1, self.currentTree.c2, self.currentTree.c3, self.currentTree.c4, self.currentTree.c5, self.currentTree.c6]
             if isinstance(branchesList[index], Tree):
                 self.currentTree = branchesList[index]
-                print(self.currentTree.c1)
         else:
             print("Invalid input entered!")
 
