@@ -1,6 +1,30 @@
 import pygame
 import sys
+from TitleScreen import *
+from Player import *
+from spriteSheet import *
+from Enemy import *
+from enemy_attack import *
+from Equipable import *
+from Tile import *
+from Door import *
+from Room import *
+from item import *
+from Animatable import *
+from Button import *
+from statusBar import *
+from enemyStatusBar import *
+from Battle import *
+from Attack import *
+from TreeManager import *
+from textWrapper import *
+from messageBox import *
+from optionBox import *
+from inventoryGUI import *
+from minimap import *
+print("No errors detected ... yet")
 from assets import *
+
 #import objects
 
 
@@ -29,6 +53,7 @@ class Game(object):
         self.active_option_boxes = pygame.sprite.Group()
         self.active_enemies = pygame.sprite.Group()
         self.title_screen = pygame.sprite.Group()
+        self.minimap_group = pygame.sprite.Group()
 
         self.active_ground_items = pygame.sprite.Group()
 
@@ -65,17 +90,17 @@ class Game(object):
 
         cracked_helmet_statreq = {"STR": 0, "DEX": 0, "AGL": 0, "INT": 0}
 
-        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, broken_gauntlets_elembonus, broken_gauntlets_statreq, "arms", "broken", "gauntlets", 10, "A pair of broken gauntlets")
+        self.broken_gauntlets = Armor(self, "Broken gauntlets", 64, 64, 2, "Plate", broken_gauntlets_elembonus, broken_gauntlets_statreq, "arms", "broken", "gauntlets", 10, "A pair of broken gauntlets")
 
-        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, broken_cuirass_elembonus, broken_cuirass_statreq, "torso", "broken", "cuirass", 6, "A broken cuirass.")
+        self.broken_cuirass = Armor(self, "Broken cuirass", 64, 64, 3, "Plate", broken_cuirass_elembonus, broken_cuirass_statreq, "torso", "broken", "cuirass", 6, "A broken cuirass.")
 
-        self.broken_greaves = Armor(self, "Broken greaves", 64, 64, broken_greaves_elembonus, broken_greaves_statreq, "legs", "broken", "greaves", 8, "A pair of broken greaves.")
+        self.broken_greaves = Armor(self, "Broken greaves", 64, 64, 2, "Plate", broken_greaves_elembonus, broken_greaves_statreq, "legs", "broken", "greaves", 8, "A pair of broken greaves.")
 
-        self.cracked_helmet = Armor(self, "Cracked helmet", 64, 64, cracked_helmet_elembonus, cracked_helmet_statreq, "head", "broken", "helmet", 8, "A cracked helmet.")
+        self.cracked_helmet = Armor(self, "Cracked helmet", 64, 64, 3, "Plate", cracked_helmet_elembonus, cracked_helmet_statreq, "head", "broken", "helmet", 8, "A cracked helmet.")
         
         broken_sword_statreq = {"STR": 2, "DEX": 0, "AGL": 0, "INT": 0}
 
-        broken_sword_elembonus = {"LIGHT": 0, "DARK": 0, "FIRE": 0, "ICE": 0}
+        broken_sword_elembonus = {"LIGHT": 5}
 
         self.broken_sword = Weapon(self, "Broken sword", 64, 64, "Straight sword", "right", "medium", "piercing", 8, 8, broken_sword_elembonus, broken_sword_statreq, None, None, "broken_sword", 15, "Horace's guardsman's sword. Mostly ornamental, its blade is now broken in two by falling rubble.")
 
@@ -83,9 +108,11 @@ class Game(object):
         
         self.player = Player(self, 64, 64, inventory, 50, 50, 20, 20, 3, 5, 5, 3, 5, None, None, None, None, None, None)
 
-        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, 20, None, None, None, None, "Beast", "goblin")
+        goblin_targetable_areas = ["Target: head", "Target: arms", "Target: legs", "Target: torso"]
 
-        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, 20, None, None, None, None, "Beast", "goblin")
+        self.goblin = Enemy(self, self.player, 384, 384, 2, "Goblin", 20, 20, 3, None, None, None, None, "Beast", "goblin", goblin_targetable_areas)
+
+        self.goblin_2 = Enemy(self, self.player, 256, 384, 2, "Goblin", 20, 20, 3, None, None, None, None, "Beast", "goblin", goblin_targetable_areas)
 
 
         room_1_enemies = [self.goblin, self.goblin_2]
@@ -136,6 +163,9 @@ class Game(object):
         self.clock = pygame.time.Clock()
 
         self.prevKey = None
+
+        self.minimap = Minimap(self, 500, 500, "minimap", self.player)
+
 
     def new(self):
 
@@ -354,14 +384,17 @@ class Game(object):
         pygame.display.flip()
 
     def battleEvents(self):
-        CLOCK_TICK = pygame.USEREVENT
+        CLOCK_TICK = pygame.USEREVENT + 2
         #pygame.time.set_timer(CLOCK_TICK, 1000)
+        ANIMATE_KEYSTROKES = pygame.USEREVENT + 1
+        ANIMATE_ENEMY = pygame.USEREVENT + 3
+        ANIMATE_ENEMY_ATTACK = pygame.USEREVENT + 4
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_t:
-                    pygame.time.set_timer(CLOCK_TICK, 1000)
+                    pygame.time.set_timer(CLOCK_TICK, 1000) #tick every second (1000 milliseconds)
                 else:
                     self.battleEvent.game_clock.tick()
                     time_elapsed = self.battleEvent.game_clock.get_time()
@@ -380,9 +413,16 @@ class Game(object):
                         
                 
             if event.type == CLOCK_TICK:
-                    print("Clock ticked!")
-                    
+                    print("Clock ticked!")        
                     self.battleEvent.turn_determiner()
+            if event.type == ANIMATE_ENEMY_ATTACK:
+                    self.battleEvent.enemy_attacking_animation()
+            if event.type == ANIMATE_KEYSTROKES:
+                for keystroke in self.battleEvent.displayed_keystrokes:
+                    keystroke.animate()
+            if event.type == ANIMATE_ENEMY:
+                self.battleEvent.enemyAnimation()
+            
             
                 
             
@@ -431,7 +471,7 @@ class Game(object):
        self.inactive_doors.draw(self.window)
        #group to the screen
 
-       self.active_props.draw(self.window) #draw all of the current room's props to the screen
+        #draw all of the current room's props to the screen
 
        self.entities.draw(self.window) #draw all entities
 
@@ -445,6 +485,8 @@ class Game(object):
 
        self.inventoryWindow.draw(self.window)
 
+       self.minimap_group.draw(self.window)
+
        self.active_message_boxes.draw(self.window)
 
        self.active_battle.draw(self.window)
@@ -455,9 +497,22 @@ class Game(object):
 
        pygame.display.flip() #update the surfaces
 
-    def callUpdateStatusBar(self):
-        self.statusbar.updateBonuses()
+    def callUpdateStatusBar(self, healthChange, bar):
+        if bar == 1:
+            self.statusbar.updateBonuses()
+            if healthChange < 0:
+                self.statusbar.decreaseHealth()
+            elif healthChange > 0:
+                self.statusbar.increaseHealth()
+        elif bar == 2:
+            for enemy_status_bar in self.active_enemy_status_bar:
+                if healthChange < 0:
+                    enemy_status_bar.decreaseHealth()
+                elif healthChange > 0:
+                    enemy_status_bar.increaseHealth()
+            
 
+            
     def checkPropCollisions(self, direction):
         #collides = False
         #for prop in self.active_props.sprites():
@@ -507,6 +562,12 @@ class Game(object):
                 self.battle = True
                 self.battleEvent = Battle(self, self.player, enemy, 0, 150)
                 self.battleEvent.add(self.active_battle)
+                ANIMATE_KEYSTROKES = pygame.USEREVENT + 1
+                pygame.time.set_timer(ANIMATE_KEYSTROKES, 125)
+                ANIMATE_ENEMY = pygame.USEREVENT + 3
+                pygame.time.set_timer(ANIMATE_ENEMY, 125)
+                #ANIMATE_ENEMY_ATTACK = pygame.USEREVENT + 4
+                #pygame.time.set_timer(ANIMATE_ENEMY_ATTACK, 125)
                 
 
     def toggleInventoryVisibility(self):
@@ -615,6 +676,8 @@ class Game(object):
             enemy.add(self.active_enemies)
 
         self.player.background = self.activeRoom.full_background_image
+
+        self.minimap.updateLocation()
             
 
         
