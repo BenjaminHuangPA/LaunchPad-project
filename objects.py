@@ -2,6 +2,8 @@
 import pygame
 from assets import *
 
+from Prop import *
+
 pygame.display.init()
 
 
