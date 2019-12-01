@@ -41,7 +41,7 @@ class Animatable(Prop): #this subclass of prop is for things that are animated.
                     self.animationCount = 0
                 else:
                     self.animationCount == len(self.animationList)
-                    self.replaceBackground()
+                    #self.replaceBackground()
             else:
                 self.animationCount += 1
 

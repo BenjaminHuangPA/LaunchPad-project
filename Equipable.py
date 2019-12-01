@@ -76,7 +76,7 @@ class Equipable(pygame.sprite.Sprite):
 class Armor(Equipable):
     def __init__(self, game, displayName, x, y, dmgReduction, armorType, elemBonus, statReq, region, setName, typeName, value, description):
         path = "img/items/armor/"+setName+"/"+setName+"_"+typeName+"/"+setName+"_"+typeName
-        super().__init__(game, displayName, x, y, statReq,path+"_game_back.png", path+"_game_front.png", path+"_game_left.png", path+"_game_right.png", path+"_32x32.png", path+"_game.png", value, description)
+        super().__init__(game, displayName, x, y, statReq,path+"_game_back.png", path+"_game_front.png", path+"_game_left.png", path+"_game_right.png", path+"_32x32.png", path+"_32x32.png", value, description)
         self.dmgReduction = dmgReduction
         self.armorType = armorType
         self.elemBonus = elemBonus

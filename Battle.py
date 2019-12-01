@@ -55,6 +55,8 @@ class Battle(pygame.sprite.Sprite):
 
         self.enemy_status_bar.add(self.game.active_enemy_status_bar)
 
+        self.renderPlayerEquipment()
+
         self.player_turn_length = 0
 
         self.enemy_turn_length = 0 #these variables describe seconds since turn began
@@ -138,6 +140,32 @@ class Battle(pygame.sprite.Sprite):
 
         #self.slash_effect = Animatable(0, 0, self.game, "Slash effect", 70, False
 
+        self.isWon = False
+
+        self.isLost = False
+
+
+    def renderPlayerEquipment(self):
+##        print("Head armor: " + self.player.headArmor)
+##        print("Torso armor: " + self.player.torsoArmor)
+##        print("Arm armor: " + self.player.armArmor)
+##        print("Leg armor: " + self.player.legArmor)
+
+        
+
+        if self.player.headArmor != None:
+            self.image.blit(self.player.headArmor.equipImage, (433, 203))
+        if self.player.torsoArmor != None:
+            self.image.blit(self.player.torsoArmor.equipImage, (433, 253))
+        if self.player.armArmor != None:
+            self.image.blit(self.player.armArmor.equipImage, (474, 203))
+        if self.player.legArmor != None:
+            self.image.blit(self.player.legArmor.equipImage, (473, 253))
+        if self.player.lWeapon != None:
+            self.image.blit(self.player.lWeapon.equipImage, (515, 203))
+        if self.player.rWeapon != None:
+            self.image.blit(self.player.rWeapon.equipImage, (515, 253))
+        
     
 
     def chooseAnimation(self, mode, effectX, effectY):
@@ -186,7 +214,18 @@ class Battle(pygame.sprite.Sprite):
         elif mode == "unsuccessful attack":
             self.currentAnimation = Animatable(80, 325, self.game, "blocked attack", 72, False, self.enemy.idle_background, self.enemy.hurtAnim, 5, 1, None, self.enemy.idle_background, True, None)  
             self.currentAnimation.add(self.game.clock_group)
-            
+        elif mode == "victory":
+            self.currentAnimation = Animatable(80, 325, self.game, "death anim", 72, False, self.enemy.idle_background, self.enemy.deathAnim, 40, 1, None, self.enemy.idle_background, False, None)                                 
+            self.currentAnimation.add(self.game.clock_group)
+            self.secondaryCurrentAnimation = Animatable(33, 235, self.game, "victory banner", 72, False, "img/misc/banner_bg.png", "img/misc/victory_banner.png", 10, 1, None, "img/misc/banner_bg.png", False, None)
+            self.secondaryCurrentAnimation.add(self.game.clock_group)
+        elif mode == "defeat":
+            self.currentAnimation = Animatable(80, 325, self.game, "Enemy idle animation", 69, False, self.enemy.idle_background, self.enemy.idleAnim, 9, 1, None, self.enemy.idle_background, True, None) 
+            self.currentAnimation.add(self.game.clock_group)
+            self.secondaryCurrentAnimation = Animatable(64, 235, self.game, "defeat banner", 72, False, "img/misc/banner_bg.png", "img/misc/victory_banner.png", 10, 1, None, "img/misc/banner_bg.png", False, None)                           
+            self.secondaryCurrentAnimation.add(self.game.clock_group)
+
+
     def enemyAnimation(self):
         if self.currentAnimation.name != "Enemy hurt prop":
             
@@ -195,6 +234,35 @@ class Battle(pygame.sprite.Sprite):
         if self.secondaryCurrentAnimation != None:
             self.secondaryCurrentAnimation.animate()
         self.checkDurations()
+        if self.isWon == False and self.isLost == False:
+            self.checkIfWon()
+
+    def checkIfWon(self):
+        if self.enemy.HP <= 0:
+            self.victorySequence()
+            self.isHurt = False
+            self.isAttacking = False
+            self.unsuccessfulAttack = False
+            self.successfulAttack = False
+        elif self.player.HP <= 0:
+            self.defeatSequence()
+            self.isHurt = False
+            self.isAttacking = False
+            self.unsuccessfulAttack = False
+            self.successfulAttack = False
+            
+
+    def victorySequence(self):
+        self.chooseAnimation("victory", None, None)
+        self.isWon = True
+        self.logBattleOutcome()
+
+
+    def defeatSequence(self):
+        self.chooseAnimation("defeat", None, None)
+        self.isLost = True
+        self.logBattleOutcome()
+
 
     def checkDurations(self):
         if self.isHurt == True:
@@ -217,6 +285,7 @@ class Battle(pygame.sprite.Sprite):
                     self.game.callUpdateStatusBar(-1 * damage, 1)
                     self.logDamage(damage, self.pendingAttack.player.name, self.pendingAttack.enemy.name)
                     self.chooseAnimation("successful attack", None, None)
+                    self.logAttack(self.pendingAttack, damage)
                     self.successfulAttack = True
                     self.unsuccessfulAttack = False
                 else:
@@ -230,7 +299,7 @@ class Battle(pygame.sprite.Sprite):
                 self.currentAnimation.remove(self.game.clock_group)
                 self.chooseAnimation("idling", None, None)
                 self.successfulAttack = False
-                self.logAttack(self.pendingAttack)
+                #self.logAttack(self.pendingAttack)
         elif self.unsuccessfulAttack == True:
             if self.currentAnimation.animationCount == 4:
                 print("Attack animation over")
@@ -238,8 +307,9 @@ class Battle(pygame.sprite.Sprite):
                 self.chooseAnimation("idling", None, None)
                 self.unsuccessfulAttack = False
         
+        
 
-    def logAttack(self, attack):
+    def logAttack(self, attack, damage):
         playerName = attack.player.name
         enemyName = attack.enemy.name
         if isinstance(attack.move, str) == True:
@@ -270,21 +340,35 @@ class Battle(pygame.sprite.Sprite):
                 regionName = "right leg"
                 specificRegionName = ""
         outputString = playerName + " used " + moveName + " at " + enemyName + "'s " + regionName + "." 
+        outputString2 = self.logDamage(damage, playerName, enemyName)
 
-        self.drawToLog(outputString)
+        self.drawToLog(outputString + outputString2)
 
     def logDamage(self, damage, combatant1, combatant2):
         outputString = combatant1 + " dealt " + str(damage) + " damage to " + combatant2 + " with this attack."
+        return outputString
+        #self.drawToLog(outputString)
+
+    def logBattleOutcome(self):
+        if self.isWon == True:
+            outputString = "Horace won the battle!"
+        elif self.isLost == True:
+            outputString = self.enemy.name + " won the battle!"
         self.drawToLog(outputString)
 
     def drawToLog(self, outputString):
         textwrapper = textWrapper()
+        if self.battleLogY >= 450:
+            self.image.blit(self.bg, (441, 328), (441, 328, 197, 162))
+            self.battleLogY = 328
         
         textwrapper.blitText(self.image, self.battleLogX, self.battleLogY, outputString, 200, 15, 12, (255, 255, 255))
         text_size = textwrapper.textsize
         text_height = text_size[1]
 
-        self.battleLogY += (text_height + 20)
+        self.battleLogY += (text_height + 30)
+
+         
             
     def player_clock_tick(self):
         self.player_clock.animate()
@@ -344,27 +428,28 @@ class Battle(pygame.sprite.Sprite):
             
 
     def turn_determiner(self):
-        if self.turn_count % 2 != 0:
-            self.modifyOptions(1)
-            self.player_clock_tick()
-            self.player_turn_length += 1
-            if self.player_turn_length == 12:
-                self.turn_count += 1
-                self.player_turn_length = 0
-                self.turn_indicator("Goblin")
-        elif self.turn_count % 2 == 0:
-            self.modifyOptions(2)
-            self.enemy_clock_tick()
-            self.enemy_turn_length += 1
-            if self.enemy_turn_length == 5:
-                print("Enemy turn executed.")
-                self.enemy_turn()
-                
-            if self.enemy_turn_length == 12:
-                self.chooseAnimation("idling", None, None)
-                self.turn_count += 1
-                self.enemy_turn_length = 0
-                self.turn_indicator("Horace")
+        if self.isWon == False and self.isLost == False:
+            if self.turn_count % 2 != 0:
+                self.modifyOptions(1)
+                self.player_clock_tick()
+                self.player_turn_length += 1
+                if self.player_turn_length == 12:
+                    self.turn_count += 1
+                    self.player_turn_length = 0
+                    self.turn_indicator("Goblin")
+            elif self.turn_count % 2 == 0:
+                self.modifyOptions(2)
+                self.enemy_clock_tick()
+                self.enemy_turn_length += 1
+                if self.enemy_turn_length == 5:
+                    print("Enemy turn executed.")
+                    self.enemy_turn()
+                    
+                if self.enemy_turn_length == 12:
+                    self.chooseAnimation("idling", None, None)
+                    self.turn_count += 1
+                    self.enemy_turn_length = 0
+                    self.turn_indicator("Horace")
     
     
 
@@ -476,11 +561,12 @@ class Battle(pygame.sprite.Sprite):
                 move = self.combos[5]
             statEffectBonus = False
             attack = Attack(self.player, self.enemy, hand, magnitude, region, specRegion, isSpecAttack, move)
-            self.logAttack(attack)
+            #self.logAttack(attack)
             #self.attackVisuals()
             self.newMethod(attack)
             damage = attack.calculateDamage()
-            self.logDamage(damage, attack.player.name, attack.enemy.name)
+            #self.logDamage(damage, attack.player.name, attack.enemy.name)
+            self.logAttack(attack, damage)
             self.game.callUpdateStatusBar(-1 * damage, 2)
             self.moveset_tree.resetCurrentTree()
             self.eraseCurrentTree()

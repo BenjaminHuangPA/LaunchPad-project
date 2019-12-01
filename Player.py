@@ -97,7 +97,13 @@ class Player(pygame.sprite.Sprite):
 
         self.targetableAreas = ["Target: head", "Target: arms", "Target: legs", "Target: torso"]
 
-        self.learnedMoves = {"Swing": self.randKeys(3), "Thrust": self.randKeys(5), "Lunge": self.randKeys(6)} 
+        self.learnedMoves = {"Swing": self.randKeys(3), "Thrust": self.randKeys(5), "Lunge": self.randKeys(6)}
+
+        self.footstep1 = pygame.mixer.Sound("music/footstep05.ogg")
+
+        self.footstep2 = pygame.mixer.Sound("music/footstep09.ogg")
+
+        self.footstepSound = None
 
     def randKeys(self, keys):
         combo = ""
@@ -122,6 +128,12 @@ class Player(pygame.sprite.Sprite):
         self.walkAnim(x, y) #play the walking animation (See below)
         self.x += x #move player left/right
         self.y += y #move player right/left
+        if self.footstepSound == False:
+            self.footstep1.play()
+            self.footstepSound = True
+        elif self.footstepSound == True:
+            self.footstep1.play()
+            self.footstepSound = False
         
 
     def randKeys(self, keys):
@@ -168,13 +180,17 @@ class Player(pygame.sprite.Sprite):
     def equipArmor(self, armor):
         if armor.region == "head":
             self.headArmor = armor
+            print("Name:" + self.headArmor.name)
         elif armor.region == "torso":
             self.torsoArmor = armor
+            print("Name:" + self.torsoArmor.name)
         elif armor.region == "arms":
             self.armArmor = armor
+            print("Name:" + self.armArmor.name)
         elif armor.region == "legs":
             self.legArmor = armor
-        self.game.callUpdateStatusBar(0)
+            print("Name:" + self.legArmor.name)
+        self.game.callUpdateStatusBar(0, 1)
 
     def equipWeapon(self, weapon):
         if weapon.hand == "left":
@@ -192,7 +208,7 @@ class Player(pygame.sprite.Sprite):
             self.armArmor = None
         elif region == "legs":
             self.legArmor = None
-        self.game.callUpdateStatusBar(0)
+        self.game.callUpdateStatusBar(0, 1)
 
 
     def unequipWeapon(self, hand):

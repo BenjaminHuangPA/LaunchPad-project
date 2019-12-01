@@ -205,7 +205,8 @@ class Game(object):
 
     def titleScreen(self):
         self.title = True
-        
+        pygame.mixer.music.load('music/Defending-the-Princess-Haunted_v002.mp3')
+        pygame.mixer.music.play(0)
         while self.title == True:
             self.titleScreenEvents()
             self.titleScreenDraw()
@@ -259,6 +260,9 @@ class Game(object):
                     self.quit()
                 elif self.titlescreen.clickButton(mousePos) == 1:
                     self.title = False
+                    WALK_SOUND = pygame.USEREVENT + 2
+                    pygame.time.set_timer(WALK_SOUND, 5000)
+                    
 
             
             
@@ -270,10 +274,21 @@ class Game(object):
             
             
     def events(self):
+        WALK_SOUND = pygame.USEREVENT + 2
         for event in pygame.event.get(): #loop through events of pygame
             
             if event.type == pygame.QUIT: 
                 self.quit() #if the event is "quit" run the method self.quit()
+
+            if event.type == WALK_SOUND:
+                if self.player.footstepSound == False:
+                    self.player.footstep1.play()
+                    self.player.footstepSound = True
+                elif self.player.footstepSound == True:
+                    self.player.footstep2.play()
+                    self.player.footstepSound = False
+                
+            
             if event.type == pygame.KEYDOWN:
 
                 
@@ -283,20 +298,24 @@ class Game(object):
                 if event.key == pygame.K_LEFT and self.player.x > 64 and self.checkPropCollisions("left") == False:
                     self.player.move(-10, 0)
                     self.prevKey = "l"
+                    self.player.footstepSound = True
                
                     
                 if event.key == pygame.K_RIGHT and self.player.x < 512 and self.checkPropCollisions("right") == False:
                     self.player.move(10, 0)
                     self.prevKey = "r"
+                    self.player.footstepSound = True
 
                         
                 if event.key == pygame.K_UP and self.player.y > 64 and self.checkPropCollisions("up") == False:
                     self.player.move(0, -10)
                     self.prevKey = "u"
+                    self.player.footstepSound = True
                     
                 if event.key == pygame.K_DOWN and self.player.y < 512 and self.checkPropCollisions("down") == False:
                     self.player.move(0, 10)
                     self.prevKey = "d"
+                    self.player.footstepSound = True
                 
                 if event.key == pygame.K_e:
                     
@@ -317,7 +336,9 @@ class Game(object):
 
             if event.type == pygame.KEYUP:
                 if self.prevKey == "l" or self.prevKey == "r" or self.prevKey == "u" or self.prevKey == "d":
-                    self.player.idle()        
+                    self.player.idle()
+                if self.player.footstepSound == False or self.player.footstepSound == True:
+                    self.player.footstepSound = None
                 
                     
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -470,6 +491,8 @@ class Game(object):
        self.active_doors.draw(self.window)
        self.inactive_doors.draw(self.window)
        #group to the screen
+
+       self.active_props.draw(self.window)
 
         #draw all of the current room's props to the screen
 
