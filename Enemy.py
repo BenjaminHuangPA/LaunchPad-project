@@ -113,6 +113,8 @@ class Enemy(pygame.sprite.Sprite): #create enemy class
 
         self.attackRightLegSuccessfulAnim = path+"_attack_right_leg_successful.png"
 
+        self.deathAnim = path+"_death_anim.png"
+    
         self.idle_background = path+"_background.png"
 
         self.hurt_background = path+"_hurt_bg.png"

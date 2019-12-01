@@ -35,31 +35,44 @@ class Attack(object):
             armorBonus = 0
             elemBonus = 0
             print(self.region)
+            if self.hand == "Left handed attack":
+                if self.player.lWeapon != None:
+                    DMG_type = self.player.lWeapon.dmgType
+                else:
+                    DMG_type = "Blunt"
+            elif self.hand == "Right handed attack":
+                if self.player.rWeapon != None:
+                    DMG_type = self.player.rWeapon.dmgType
+                else:
+                    DMG_type = "Blunt"
+            elif self.hand == "Enemy attack":
+                DMG_type = self.move.dmg_type
+            
             if self.region == "Target: arms":
                 if self.enemy.armArmor != None:
                     armorBonus = self.determineDmgTypeBonus(self.enemy.armArmor.getArmorType(), DMG_type)
-                    elemBonus = self.determineElemTypeBonus(self.enemy.armArmor, elemental, elementalDMG) 
+                    elemBonus = self.determineElemTypeBonus(self.enemy.armArmor) 
                     dmgTaken = totalDamage - armorBonus - elemBonus
                 else:
                     dmgTaken = totalDamage
             elif self.region == "Target: legs":
                 if self.enemy.legArmor != None:
                     armorBonus = self.determineDmgTypeBonus(self.enemy.legArmor.getArmorType(), DMG_type)
-                    elemBonus = self.determineElemTypeBonus(self.enemy.legArmor, elemental, elementalDMG) 
+                    elemBonus = self.determineElemTypeBonus(self.enemy.legArmor) 
                     dmgTaken = totalDamage - armorBonus - elemBonus
                 else:
                     dmgTaken = totalDamage
             elif self.region == "Target: head":
                 if self.enemy.headArmor != None:
                     armorBonus = self.determineDmgTypeBonus(self.enemy.headArmor.getArmorType(), DMG_type)
-                    elemBonus = self.determineElemTypeBonus(self.enemy.headArmor, elemental, elementalDMG) 
+                    elemBonus = self.determineElemTypeBonus(self.enemy.headArmor) 
                     dmgTaken = totalDamage - armorBonus - elemBonus
                 else:
                     dmgTaken = totalDamage
             elif self.region == "Target: torso":
                 if self.enemy.torsoArmor != None:
                     armorBonus = self.determineDmgTypeBonus(self.enemy.torsoArmor.getArmorType(), DMG_type)
-                    elemBonus = self.determineElemTypeBonus(self.enemy.torsoArmor, elemental, elementalDMG) 
+                    elemBonus = self.determineElemTypeBonus(self.enemy.torsoArmor) 
                     dmgTaken = totalDamage - armorBonus - elemBonus
                 else:
                     dmgTaken = totalDamage
@@ -164,6 +177,7 @@ class Attack(object):
                 bonus = -4
             elif dmgType == "Slashing":
                 bonus == 0
+        return bonus
 
     def determineElemTypeBonus(self, armor):
 ##        bonus_elem_reduction = 0
@@ -183,8 +197,8 @@ class Attack(object):
             dmgType = list(self.player.lWeapon.elemBonus.keys())[0]
             total_elemental_dmg = self.player.lWeapon.elemBonus[0]
         elif self.hand == "Enemy attack":
-            dmgType = move.elemental
-            dmgType = move.elementalDamage
+            #dmgType = move.elemental
+            dmgType = self.move.elementalDamage
             
         bonus_elem_reduction = 0
         
@@ -199,7 +213,7 @@ class Attack(object):
         else:
             bonus_elem_reduction = 0
 
-        total_elemental_damage = total_elemental_damage - bonus_elem_reduction
+        total_elemental_dmg = total_elemental_dmg - bonus_elem_reduction
 
-        return total_elemental_damage
+        return total_elemental_dmg
     

@@ -126,17 +126,18 @@ class inventoryGUI(pygame.sprite.Sprite): #inventory GUI class
             if self.player.canEquip(self.currentSelection) == True:
                 if self.currentSelection.type == "armor":
                     if self.currentSelection.region == "head":
-                        self.image.blit(self.currentSelection.equipImage, (406, 18))
+                        self.image.blit(self.currentSelection.equipImage, (422, 35))
                         print("Helmet equipped!")
                     elif self.currentSelection.region == "torso":
-                        self.image.blit(self.currentSelection.equipImage, (406, 100))
+                        self.image.blit(self.currentSelection.equipImage, (422, 114))
                         print("Chestplate equipped!")
                     elif self.currentSelection.region == "arms":
-                        self.image.blit(self.currentSelection.equipImage, (406, 182))
+                        self.image.blit(self.currentSelection.equipImage, (422, 197))
                         print("Gauntlets equipped!")
                     elif self.currentSelection.region == "legs":
-                        self.image.blit(self.currentSelection.equipImage, (407, 264))
+                        self.image.blit(self.currentSelection.equipImage, (422, 280))
                         print("Greaves equipped!")
+                    print("Name: " + self.currentSelection.name)
                     self.player.equipArmor(self.currentSelection)
                 elif self.currentSelection.type == "weapon":
                     if self.currentSelection.hand == "left":

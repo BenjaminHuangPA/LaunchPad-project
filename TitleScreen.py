@@ -48,10 +48,12 @@ class TitleScreen(pygame.sprite.Sprite):
 
         self.rect.y = y
 
+        self.playSound = True
+
+        self.button_mouseover_sound = pygame.mixer.Sound("music/rollover4.ogg")
         
 
     def buttonMouseOver(self, pos):
-        
         if self.new_game_pos.collidepoint(pos):
             self.selectButton(self.new_game_button_selected, self.new_game_pos)
             self.current_selection = self.new_game_button
@@ -78,6 +80,9 @@ class TitleScreen(pygame.sprite.Sprite):
         
 
     def selectButton(self, selectedButton, pos_rect):
+        if self.playSound == True:
+            self.button_mouseover_sound.play()
+        self.playSound = False
         self.image.blit(self.bg, (pos_rect.left, pos_rect.top), (pos_rect.left, pos_rect.top, 177, 37))
         self.image.blit(selectedButton, (pos_rect.left, pos_rect.top), (0, 0, 177, 37))
 
@@ -85,10 +90,11 @@ class TitleScreen(pygame.sprite.Sprite):
         if self.current_selection != None:
             self.image.blit(self.bg, (pos_rect.left, pos_rect.top), (pos_rect.left, pos_rect.top, 177, 37))
             self.image.blit(button, (pos_rect.left, pos_rect.top), (0, 0, 177, 37))
-
+        self.playSound = True
+    
     def clickButton(self, pos):
         if self.new_game_pos.collidepoint(pos):
-            
+            pygame.mixer.music.stop()
             return 1
         elif self.load_game_pos.collidepoint(pos):
             
